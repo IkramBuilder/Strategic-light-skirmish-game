@@ -310,9 +310,10 @@ table.stand tr.me td{color:var(--amber)}.dot{display:inline-block;width:9px;heig
 /* =========================================================
    REVISION  (badge top-right; details behind DEV_PIN)
    ========================================================= */
-const REV='2.1.0';
+const REV='2.2.0';
 const DEV_PIN='2468';           // change this to your own PIN
 const CHANGELOG=[
+ {rev:'2.2.0',date:'2026-10-30',notes:['Ultra: Iron Templars get articulated skeletons (hips, spine, chest, neck, head, shoulders, elbows, hands, thighs, knees, feet, cape links)','Procedural clips: idle breathing and weight shift, walk with knee bend and arm swing, aim and recoil, overhead hammer swing, hit flinch, collapse on death','Dreadnought: jointed legs, aiming gun arm, opening claw; Bondsmith servo-arm hammering; hero cape secondary motion; caster staff raise; medic healing pose; jump-pack flames']},
  {rev:'2.1.0',date:'2026-10-30',notes:['anime.js UI motion: toasts, race cards, emblems, pros/cons stagger, title intro, end screen, button bounce, power-ready pulse, resource bump, supply shake','canvas-confetti: victory, achievements, MVP, boss slain','Achievement banner','Both libraries load from CDN in the background; the game runs without them offline; respects reduced-motion']},
  {rev:'2.0.1',date:'2026-10-30',notes:['Game renamed to Dafhio Dominion']},
  {rev:'2.0.0',date:'2026-10-30',notes:[
@@ -1006,7 +1007,7 @@ function makeUnitMesh(team,fac,key){
   const d=FAC[fac].units[key],c=FAC[fac].col;
   const p=base(d.r,d.h,team),L=p.lunge;
   const A=std(c.a),B=std(c.b),G=glow(c.g),H=std(c.h);
-  const X=XUNIT[fac+'_'+key];
+  const X=(GQ===3&&RIGS[fac+'_'+key])||XUNIT[fac+'_'+key];
   if(X)X(p,L,A,B,G,H,d);
   else if(fac==='vanguard'){
     if(key==='worker'){
@@ -1060,7 +1061,7 @@ function makeUnitMesh(team,fac,key){
   }
   const DX=XDETAIL[fac+'_'+key];if(DX)DX(p,L,A,B,G,H,d);
   const DX2=XDETAIL2[fac+'_'+key];if(DX2)DX2(p,L,A,B,G,H,d);
-  if(GQ>=2&&XHIGH[fac])XHIGH[fac](p,L,A,B,G,H,d,key);
+  if(GQ>=2&&XHIGH[fac]&&!p.rig)XHIGH[fac](p,L,A,B,G,H,d,key);
   if(d.hero){p.heroRing=mk(geo('hring',()=>{const g=new THREE.RingGeometry(1.25,1.45,32);g.rotateX(-Math.PI/2);return g}),matc('hring',()=>new THREE.MeshBasicMaterial({color:0xf2c14e,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false})),0,.09,0,p.root);p.heroRing.scale.setScalar(d.r+.4)}
   if(d.heal){p.beam=mk(geo('beam',()=>{const g=new THREE.BoxGeometry(.09,.09,1);g.translate(0,0,.5);return g}),matc('beam'+fac,()=>new THREE.MeshBasicMaterial({color:fac==='vanguard'?0x7dffc0:0xd2ff6a,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false})),0,1.2,0,p.root);p.beam.visible=false}
   if(d.worker){p.carry=mk(octa(.22),glow(0x59c8ff),0,d.h-.1,0,L);p.carry.visible=false}
@@ -1068,7 +1069,7 @@ function makeUnitMesh(team,fac,key){
     p.aura=new THREE.Sprite(matc('aura',()=>new THREE.SpriteMaterial({map:GLOW,color:0xff3355,blending:THREE.AdditiveBlending,transparent:true,opacity:.55,depthWrite:false})));
     p.aura.scale.setScalar(d.r*4);p.aura.position.y=d.h*.45;p.aura.visible=false;p.root.add(p.aura);
   }
-  bakeStatic(p,'u_'+fac+'_'+key+'_'+GQ);
+  if(!p.rig)bakeStatic(p,'u_'+fac+'_'+key+'_'+GQ);
   if(GQ===3)p.root.traverse(o=>{if(o.isMesh&&o.material&&o.material.type==='MeshLambertMaterial')o.castShadow=true});
   return p;
 }
@@ -1607,6 +1608,106 @@ XHIGH.templar=XHIGH.vanguard;
 XHIGH.legion=(p,L,A,B,G,H,d)=>{if(d.air)return;const h=d.h,r=d.r;for(const sg of[-1,1])mk(box(.03,h*.4,.03),G,sg*r*.45,h*.55,r*.3,L);p.shards=grp(0,h*.8,0,L);for(let i=0;i<2;i++)mk(sph(.05,6),G,(i?1:-1)*(r+.3),0,0,p.shards)};
 XHIGH.warband=(p,L,A,B,G,H,d)=>{const h=d.h,r=d.r;for(let i=0;i<3;i++)mk(cone(.05,.3,4),H,(i-1)*r*.3,h*.8,-r*.4,L).rotation.x=-.5;mk(box(r*.5,.04,r*.3),std(0x8a5a2a),r*.2,h*.6,r*.3,L)};
 XHIGH.cult=(p,L,A,B,G,H,d)=>{const h=d.h,r=d.r;for(let i=0;i<4;i++)mk(cone(.04,.28,4),H,(i-1.5)*r*.25,h*.75,-r*.35,L).rotation.x=-.4;mk(sph(.05,6),G,r*.4,h*.5,r*.2,L)};
+
+/* =========================================================
+   ULTRA SKELETONS (articulated rigs, forward kinematics) - Iron Templars
+   ========================================================= */
+const RIGS={};
+const sm=(c,t,k)=>c+(t-c)*k;
+function rigHum(p,L,A,B,G,H,o){
+  const S=o.s||1,R={kind:'hum',o};const T=grp(0,0,0,L);T.scale.setScalar(S);R.root=T;
+  const hips=grp(0,.98,0,T);R.hips=hips;mk(box(.5,.22,.32),B,0,0,0,hips);mk(box(.54,.08,.36),H,0,.1,0,hips);
+  if(o.robe){const rb=mk(cone(.42,.9,10),o.robe,0,-.4,0,hips);rb.scale.set(1,1,.85)}
+  R.legs=[];for(const sg of[-1,1]){const th=grp(sg*.15,-.06,0,hips);mk(box(.2,.42,.24),A,0,-.21,0,th);mk(box(.23,.16,.27),B,0,-.04,0,th);
+    const kn=grp(0,-.42,0,th);mk(sph(.11,8),H,0,0,.05,kn);mk(box(.18,.4,.22),B,0,-.2,0,kn);mk(box(.2,.32,.07),A,0,-.18,.12,kn);
+    const ft=grp(0,-.42,0,kn);mk(box(.22,.11,.36),B,0,-.04,.07,ft);mk(box(.22,.05,.12),A,0,0,.2,ft);R.legs.push({th,kn,ft,sg})}
+  const sp=grp(0,.12,0,hips);R.spine=sp;mk(box(.44,.18,.32),B,0,.06,0,sp);
+  const ch=grp(0,.18,0,sp);R.chest=ch;mk(box(.64*(o.w||1),.5,.42),A,0,.16,0,ch);mk(box(.36,.14,.05),H,0,.24,.22,ch);
+  for(const sg of[-1,1])mk(box(.14,.05,.05),H,sg*.2,.27,.22,ch);
+  if(o.chestG)mk(box(.12,.12,.04),o.chestG,0,.08,.23,ch);
+  if(o.pack){mk(box(.5,.52,.26),B,0,.16,-.33,ch);mk(box(.3,.08,.04),G,0,.3,-.47,ch);R.jets=[];for(const sg of[-1,1]){mk(cyl(.07,.1,.28,8),B,sg*.15,-.12,-.38,ch);const j=mk(cone(.08,.35,8),glow(o.jetCol||0xffa040),sg*.15,-.42,-.38,ch);j.rotation.x=Math.PI;R.jets.push(j)}}
+  const nk=grp(0,.44,.02,ch);R.neck=nk;const hd=grp(0,.12,0,nk);R.head=hd;
+  if(o.helm==='hood'){mk(cone(.25,.52,10),B,0,.1,-.03,hd);mk(sph(.13,8),std(0x15161a),0,-.02,.06,hd);for(const sg of[-1,1])mk(sph(.03,6),G,sg*.05,0,.17,hd)}
+  else{mk(sph(.2,12),A,0,0,0,hd);mk(box(.27,.07,.08),G,0,.02,.16,hd);mk(box(.13,.1,.1),B,0,-.1,.15,hd);if(o.helm==='crest')mk(box(.04,.22,.42),H,0,.18,-.02,hd);if(o.laurel)for(const sg of[-1,1])mk(box(.03,.05,.22),H,sg*.18,.06,0,hd)}
+  R.arms=[];for(const sg of[-1,1]){const sh=grp(sg*.39,.3,0,ch);const pad=mk(sph(.22*(o.pad||1),12),A,sg*.07,.05,0,sh);pad.scale.set(1,.78,1.12);if(o.trim)mk(box(.05,.05,.32*(o.pad||1)),H,sg*(.2*(o.pad||1)),.08,0,sh);
+    const ua=grp(0,-.06,0,sh);mk(box(.15,.32,.16),B,0,-.16,0,ua);const el=grp(0,-.32,0,ua);mk(sph(.085,8),H,0,0,0,el);mk(box(.17,.3,.19),A,0,-.15,.01,el);
+    const hn=grp(0,-.32,0,el);mk(box(.12,.11,.13),B,0,-.04,0,hn);R.arms.push({sh,ua,el,hn,sg})}
+  const rh=R.arms[1].hn;
+  if(o.wpn==='rifle'||o.wpn==='heavy'){const hv=o.wpn==='heavy';const w=grp(0,-.06,.04,rh);mk(box(hv?.2:.11,hv?.95:.78,hv?.22:.14),B,0,-.3,0,w);mk(box(.05,.16,.06),G,0,-.08,hv?.12:.08,w);
+    if(hv)mk(cyl(.07,.07,.25,8),H,0,-.82,0,w);R.muz=grp(0,hv?-.95:-.72,0,w);mk(sph(.05,6),G,0,0,0,R.muz);R.twoHand=true}
+  else if(o.wpn==='hammer'){const w=grp(0,-.04,0,rh);mk(cyl(.035,.035,1.1,6),H,0,-.2,0,w);const hd2=mk(box(.36,.22,.22),o.wM||H,0,-.75,0,w);mk(box(.38,.06,.24),G,0,-.75,0,w);R.melee=true}
+  else if(o.wpn==='staff'){const w=grp(0,-.04,0,rh);w.rotation.x=Math.PI;mk(cyl(.03,.03,1.8,6),H,0,.25,0,w);mk(octa(.13),G,0,1.15,0,w);R.staff=true}
+  else if(o.wpn==='tool'){const w=grp(0,-.04,0,rh);mk(cyl(.03,.03,.5,6),B,0,-.2,0,w);mk(box(.22,.1,.12),H,0,-.45,0,w);R.tool=true}
+  if(o.cape){R.cape=[];let par=ch,y=.36,z=-.26;for(let i=0;i<3;i++){const c=grp(0,y,z,par);mk(box(.66*(o.w||1),.36,.035),std(o.cape),0,-.18,0,c);R.cape.push(c);par=c;y=-.36;z=0}}
+  if(o.servo){const b=grp(.12,.42,-.42,ch);mk(sph(.08,6),H,0,0,0,b);const a1=grp(0,0,0,b);mk(box(.07,.07,.5),B,0,.12,.2,a1);a1.rotation.x=-.6;const a2=grp(0,.24,.42,a1);mk(sph(.06,6),H,0,0,0,a2);mk(box(.06,.06,.4),B,0,0,.2,a2);mk(box(.14,.08,.08),G,0,0,.42,a2);R.servo=[a1,a2]}
+  if(o.orbs){p.orbs=grp(0,.3,0,ch);for(let i=0;i<3;i++){const a=i*2.094;mk(sph(.07,6),G,Math.sin(a)*.55,0,Math.cos(a)*.55,p.orbs)}}
+  p.head=hd;p.rig=R;R.anim=rigHumAnim;return R;
+}
+function rigHumAnim(e,p,dt){
+  const R=p.rig,o=R.o,t=gtime+e.id*.37,mv=e.mv||0,ph=e.anim||0;
+  if(e.recoil>.9)e.lastShot=gtime;
+  const tgt=e.target&&!e.target.dead;const engaged=tgt?dist(e,e.target)<e.d.range+e.r+e.target.r+2.5:false;
+  const aimT=(engaged||(gtime-(e.lastShot||-9))<1.6||e.healing||e.state==='cast')?1:0;R.aim=sm(R.aim||0,aimT,Math.min(1,dt*7));const aim=R.aim;
+  const working=e.d.worker&&(e.state==='gather'||e.state==='build'||e.state==='busy')&&mv<.2;
+  // legs
+  for(const lg of R.legs){const f=ph+(lg.sg<0?0:Math.PI),swing=Math.sin(f);
+    const th=-swing*.55*mv+(1-mv)*(lg.sg*Math.sin(t*.5)*.02),kn=(.95*Math.max(0,Math.cos(f))*mv)+.06+(1-mv)*.04;
+    lg.th.rotation.x=sm(lg.th.rotation.x,th,Math.min(1,dt*14));lg.kn.rotation.x=sm(lg.kn.rotation.x,kn,Math.min(1,dt*14));lg.ft.rotation.x=-(lg.th.rotation.x+lg.kn.rotation.x)*.75;lg.th.rotation.z=lg.sg*.03}
+  R.hips.position.y=.98-Math.abs(Math.sin(ph))*.05*mv-(1-mv)*.01+Math.sin(t*1.6)*.005;R.hips.rotation.y=Math.sin(ph)*.12*mv;R.hips.rotation.z=Math.sin(t*.5)*.02*(1-mv);
+  // spine and chest
+  R.spine.rotation.x=.1*mv+aim*.04-e.hitT*.2;R.chest.rotation.y=-Math.sin(ph)*.16*mv;R.chest.rotation.x=Math.sin(t*1.6)*.025-e.recoil*.08*(R.twoHand?1:0)-e.hitT*.15;
+  R.head.rotation.x=(R.head.rotation.x||0)*.0-e.hitT*.25+aim*.05;
+  // arms
+  const L0=R.arms[0],R0=R.arms[1],sw=Math.sin(ph)*mv;
+  let lx,lz,le,rx,rz,re;
+  if(R.twoHand){lx=sm(-.55,-1.25,aim);lz=sm(.25,.5,aim);le=sm(-1.1,-.35,aim);rx=sm(-.45,-1.45,aim)+e.recoil*.25;rz=sm(-.1,-.08,aim);re=sm(-1.2,-.08,aim);lx+=sw*.06;rx+=sw*.06}
+  else if(R.melee){lx=sw*.45+aim*-.3;lz=.12;le=-.3-aim*.4;const up=sm(.1+sw*-.3,-2.4,aim);rx=sm(up,.5,e.recoil);rz=-.12;re=sm(-.25,-.5,aim)+e.recoil*.4;R.chest.rotation.y+=e.recoil*.35}
+  else if(R.staff){lx=sw*.4;lz=.12;le=-.25;rx=sm(-.35+sw*-.3,-2.5,aim);rz=-.15;re=sm(-.5,-.15,aim)}
+  else if(R.tool){lx=sw*.4;lz=.12;le=-.3;const hit=working?Math.sin(t*9):0;rx=working?-1.2+hit*.7:-.3-sw*.4;rz=-.1;re=working?-1+hit*.4:-.4}
+  else{lx=sw*.45;lz=.12;le=-.3;rx=e.healing?-1.35:-sw*.45;rz=-.12;re=e.healing?-.1:-.3}
+  const k=Math.min(1,dt*16);
+  L0.sh.rotation.x=sm(L0.sh.rotation.x,lx,k);L0.sh.rotation.z=sm(L0.sh.rotation.z,lz,k);L0.el.rotation.x=sm(L0.el.rotation.x,le,k);
+  R0.sh.rotation.x=sm(R0.sh.rotation.x,rx,e.recoil>.5?1:k);R0.sh.rotation.z=sm(R0.sh.rotation.z,rz,k);R0.el.rotation.x=sm(R0.el.rotation.x,re,k);
+  if(R.cape)R.cape.forEach((c,i)=>{c.rotation.x=sm(c.rotation.x,(i?.12:.06)+mv*(.35+i*.12)+Math.sin(t*3.2-i*.8)*(.05+.08*mv),Math.min(1,dt*6))});
+  if(R.jets){const f=.5+mv*.9+Math.random()*.3;for(const j of R.jets)j.scale.set(1,f,1);if(mv>.5&&GQ>=2&&Math.random()<dt*20)sparks(e.x-Math.sin(e.face)*.4,1.1,e.z-Math.cos(e.face)*.4,0xffa040,1,.6,.3,-.2,-.2)}
+  if(R.servo){const w=working?Math.sin(t*7):Math.sin(t*1.2)*.2;R.servo[0].rotation.x=-.6+w*.25;R.servo[1].rotation.x=.4+w*.5;if(working&&Math.random()<dt*6)sparks(e.x+Math.sin(e.face)*.6,.9,e.z+Math.cos(e.face)*.6,0xffd27a,2,2,.25,1)}
+}
+function rigHumDeath(R,k){if(!R)return;const f=Math.min(1,k*2.2);for(const lg of R.legs||[]){lg.kn.rotation.x=f*1.5;lg.th.rotation.x=-f*1.1;lg.ft.rotation.x=f*.3}
+  for(const a of R.arms||[]){a.sh.rotation.x=sm(a.sh.rotation.x,-.3,f);a.sh.rotation.z=a.sg*f*.6;a.el.rotation.x=-f*.2}if(R.chest)R.chest.rotation.x=f*.5;if(R.head)R.head.rotation.x=f*.45;if(R.hips)R.hips.position.y=.98-f*.45}
+function rigDread(p,L,A,B,G,H){
+  const R={kind:'dread'},T=grp(0,0,0,L);R.root=T;const hips=grp(0,1.72,0,T);R.hips=hips;mk(box(1.05,.36,.72),B,0,0,0,hips);
+  R.legs=[];for(const sg of[-1,1]){const th=grp(sg*.58,0,0,hips);mk(sph(.27,10),H,0,0,0,th);mk(box(.38,.76,.44),A,0,-.38,0,th);mk(box(.42,.2,.48),B,0,-.12,0,th);
+    const kn=grp(0,-.78,0,th);mk(sph(.21,10),H,0,0,.04,kn);mk(box(.32,.78,.38),B,0,-.39,0,kn);mk(cyl(.05,.05,.7,6),H,0,-.32,-.22,kn);mk(box(.36,.36,.08),A,0,-.25,.21,kn);
+    const ft=grp(0,-.8,0,kn);mk(box(.58,.17,.82),A,0,-.07,.1,ft);for(const x of[-.18,0,.18])mk(box(.12,.1,.36),B,x,-.1,.55,ft);R.legs.push({th,kn,ft,sg})}
+  const ch=grp(0,.2,0,hips);R.chest=ch;mk(box(1.32,1.05,1.12),A,0,.55,0,ch);mk(box(.68,.68,.09),H,0,.6,.57,ch);mk(box(.42,.08,.05),G,0,.78,.63,ch);
+  for(const sg of[-1,1])mk(cyl(.1,.13,.9,8),B,sg*.4,1.3,-.45,ch);
+  mk(cyl(.03,.03,1.6,4),B,-.4,1.6,-.52,ch);const ban=grp(-.15,1.95,-.52,ch);mk(box(.5,.72,.03),std(0x8a2424),0,-.36,0,ban);mk(box(.2,.2,.04),H,0,-.3,.01,ban);R.banner=ban;
+  const hd=grp(0,1.15,.3,ch);mk(box(.42,.26,.36),B,0,0,0,hd);mk(box(.32,.06,.06),G,0,0,.19,hd);R.head=hd;p.head=hd;
+  R.arms=[];for(const sg of[-1,1]){const sh=grp(sg*.88,.7,.08,ch);mk(sph(.28,10),H,0,0,0,sh);const ua=grp(0,0,0,sh);mk(box(.36,.36,.55),B,0,-.05,.25,ua);const el=grp(0,-.05,.5,ua);mk(sph(.17,8),H,0,0,0,el);
+    const fa=grp(0,0,0,el);if(sg<0){mk(box(.34,.34,.9),A,0,0,.42,fa);mk(cyl(.08,.08,.35,8),G,0,0,.95,fa).rotation.x=Math.PI/2;R.muz=fa}
+    else{mk(box(.32,.32,.6),A,0,0,.28,fa);R.fingers=[];for(let f=0;f<3;f++){const fg=grp((f-1)*.11,0,.58,fa);mk(cone(.06,.38,5),H,0,0,.18,fg).rotation.x=Math.PI/2;R.fingers.push(fg)}}
+    R.arms.push({sh,ua,el,fa,sg})}
+  p.rig=R;R.anim=rigDreadAnim;return R;
+}
+function rigDreadAnim(e,p,dt){const R=p.rig,t=gtime+e.id*.3,mv=e.mv||0,ph=e.anim||0,k=Math.min(1,dt*10);
+  if(e.recoil>.9)e.lastShot=gtime;const aim=(gtime-(e.lastShot||-9))<1.6||(e.target&&!e.target.dead)?1:0;R.aim=sm(R.aim||0,aim,Math.min(1,dt*5));
+  for(const lg of R.legs){const f=ph*.8+(lg.sg<0?0:Math.PI),swing=Math.sin(f);lg.th.rotation.x=sm(lg.th.rotation.x,-swing*.42*mv,k);lg.kn.rotation.x=sm(lg.kn.rotation.x,.8*Math.max(0,Math.cos(f))*mv+.08,k);lg.ft.rotation.x=-(lg.th.rotation.x+lg.kn.rotation.x)*.9}
+  R.hips.position.y=1.72-Math.abs(Math.sin(ph*.8))*.1*mv+Math.sin(t*1.3)*.01;R.hips.rotation.z=Math.sin(ph*.8)*.05*mv;
+  R.chest.rotation.y=sm(R.chest.rotation.y,Math.sin(t*.4)*.15*(1-R.aim)*(1-mv),Math.min(1,dt*3));R.chest.rotation.x=-e.hitT*.1-e.recoil*.05;
+  const gun=R.arms[0],claw=R.arms[1];gun.sh.rotation.x=sm(gun.sh.rotation.x,-.1*R.aim+Math.sin(ph*.8)*.1*mv+e.recoil*.3,e.recoil>.5?1:k);gun.el.rotation.x=sm(gun.el.rotation.x,-.15+(1-R.aim)*.4,k);
+  claw.sh.rotation.y=sm(claw.sh.rotation.y,-e.recoil*1.1,e.recoil>.5?1:k);claw.sh.rotation.x=sm(claw.sh.rotation.x,(1-R.aim)*.35-Math.sin(ph*.8)*.1*mv,k);
+  const open=R.aim*(1-e.recoil)*.6+.05;R.fingers.forEach((fg,i)=>{fg.rotation.y=(i-1)*open;fg.rotation.x=-open*.4});
+  R.banner.rotation.x=.1+mv*.35+Math.sin(t*3)*.08*(1+mv)}
+function rigDreadDeath(R,k){const f=Math.min(1,k*2);for(const lg of R.legs){lg.kn.rotation.x=f*1.2;lg.th.rotation.x=-f*.6}for(const a of R.arms)a.sh.rotation.x=f*.6;R.hips.position.y=1.72-f*.8}
+Object.assign(RIGS,{
+ templar_worker:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'hood',robe:B,wpn:'tool',servo:1,s:.95}),
+ templar_t1:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'dome',pad:1.25,trim:1,pack:1,wpn:'rifle'}),
+ templar_t2:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'crest',pad:1.25,trim:1,pack:1,wpn:'hammer'}),
+ templar_t3:(p,L,A,B,G,H)=>rigDread(p,L,A,B,G,H),
+ templar_medic:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'dome',pad:1.1,pack:1,wpn:'none',chestG:glow(0xff4466)}),
+ templar_hero:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.22,helm:'crest',laurel:1,pad:1.5,trim:1,pack:1,cape:0x5a0e0e,wpn:'heavy',w:1.05}),
+ templar_caster:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'hood',pad:.9,cape:0x1e3a6e,wpn:'staff',orbs:1})
+});
 const MERGED={};
 function relMat(o,top){const m=new THREE.Matrix4();let n=o;while(n&&n!==top){n.updateMatrix();m.premultiply(n.matrix);n=n.parent}return m}
 function bakeStatic(p,key){
@@ -1633,7 +1734,9 @@ function bakeStatic(p,key){
 }
 function applyUpVis(e){
   if(e.isB||e.d.worker||e.d.temp)return;
-  const T=teams[e.team],p=e.p,c=FAC[T.fac].col,d=e.d,y0=d.h*.62+(d.air?-.9:0);
+  const T=teams[e.team],p=e.p,c=FAC[T.fac].col,d=e.d;
+  if(p.rig&&p.rig.chest){const C=p.rig.chest;while((p.upA||0)<T.up.a){p.upA=(p.upA||0)+1;mk(box(.7,.08,.46),std(c.h),0,.44+p.upA*.06,-.02,C)}while((p.upW||0)<T.up.w){p.upW=(p.upW||0)+1;mk(sph(.07,8),glow(c.g),(p.upW===1?-1:1)*.25,.08,.24,C)}return}
+  const y0=d.h*.62+(d.air?-.9:0);
   while((p.upA||0)<T.up.a){
     p.upA=(p.upA||0)+1;const lv=p.upA;
     if(T.fac!=='swarm'&&T.fac!=='covenant'){const pl=mk(box(1,.14,.8),std(c.h),0,y0+lv*.1,-.05,p.lunge);pl.scale.set(d.r*1.3,1,d.r*1.2)}
@@ -1873,7 +1976,7 @@ function kill(e,byTeam){
     fxs.push({t:0,life:1,upd:k=>{root.position.set(x0+vx*k,Math.max(0,y0*(1-k*k)),z0+vz*k);P.body.rotation.y+=.22;P.body.rotation.z=k*1.2;if(Math.random()<.7)sparks(root.position.x,root.position.y,root.position.z,0x555555,1,1,.9,1.2)},
       done:()=>{scene.remove(root);explosion(x0+vx,z0+vz,1.5,0xffa040);debris(x0+vx,z0+vz,.3,e.r,fac,5)}})}
   else if(T.fac!=='swarm'&&T.fac!=='covenant'){debris(e.x,e.z,e.d.h*.5,e.r,T.fac,e.d.r>=1||e.d.hero?7:3);const dir=Math.random()<.5?1:-1;
-    fxs.push({t:0,life:1.6,upd:k=>{const f=Math.min(1,k*2.4);P.lunge.rotation.x=f*f*1.35;P.lunge.rotation.z=f*.25*dir;P.lunge.position.y=0;root.position.y=k>.6?-(k-.6)*1.6:0;if(k<.5&&Math.random()<.4)sparks(root.position.x,.6,root.position.z,0xffd27a,1,2,.3,1)},done:()=>scene.remove(root)})}
+    fxs.push({t:0,life:1.6,upd:k=>{const f=Math.min(1,k*2.4);if(P.rig)(P.rig.kind==='dread'?rigDreadDeath:rigHumDeath)(P.rig,k);P.lunge.rotation.x=f*f*1.35*(P.rig?.75:1);P.lunge.rotation.z=f*.25*dir;P.lunge.position.y=0;root.position.y=k>.6?-(k-.6)*1.6:0;if(k<.5&&Math.random()<.4)sparks(root.position.x,.6,root.position.z,0xffd27a,1,2,.3,1)},done:()=>scene.remove(root)})}
   else if(T.fac==='covenant'){sparks(e.x,1,e.z,0xc6a8ff,12,2.5,.7,2);
     fxs.push({t:0,life:1,upd:k=>{P.body.scale.setScalar(Math.max(.01,1-k));root.position.y=y0+k*1.5;if(Math.random()<.5)sparks(root.position.x,root.position.y+.8,root.position.z,0xc6a8ff,1,1,.5,1)},done:()=>scene.remove(root)})}
   else{sparks(e.x,.5,e.z,0x9dff3b,10,3,.6,1.5);
@@ -2695,6 +2798,7 @@ function animate(dt){
     if(p.sac){const s=1+Math.sin(gtime*4+e.id)*.12+e.recoil*.3;p.sac.scale.setScalar(s)}
     if(p.ant)p.ant.rotation.x=Math.sin(gtime*3+e.id)*.15-e.mv*.3;
     if(p.shards)p.shards.rotation.y+=dt*(1.6+e.recoil*6);
+    if(p.rig){L.rotation.z*=.3;L.position.y*=.2;p.rig.anim(e,p,dt)}
     if(GQ>=2&&(e.d.air||p.hover)&&e.mv>.3&&Math.random()<dt*14)sparks(e.x-Math.sin(e.face)*e.r,fy+(e.d.air?0:.5),e.z-Math.cos(e.face)*e.r,FAC[fac].col.g,1,.4,.35,0);
     if(p.carry)p.carry.visible=e.carry>0;
     if(p.aura)p.aura.visible=teams[e.team].frenzy>0;
