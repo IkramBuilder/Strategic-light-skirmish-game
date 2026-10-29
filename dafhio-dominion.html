@@ -310,9 +310,10 @@ table.stand tr.me td{color:var(--amber)}.dot{display:inline-block;width:9px;heig
 /* =========================================================
    REVISION  (badge top-right; details behind DEV_PIN)
    ========================================================= */
-const REV='2.2.0';
+const REV='2.3.0';
 const DEV_PIN='2468';           // change this to your own PIN
 const CHANGELOG=[
+ {rev:'2.3.0',date:'2026-10-30',notes:['Ultra skeletons for all 7 races: humanoids (troopers, brutes, skeletons, cultists, wardens), insects (tripod gait, bending legs, mandibles, tails), jellyfish/oracle tentacles, serpent spine, winged flyers (two-joint wing flaps), reverse-knee walker, Dreadnought-style walkers','Dual-blade, launcher, flamer and claw combat poses; wings on the Fiend; tails on the Hive Tyrant','Every rig has its own death animation','Fix: building HP no longer shows long decimals (e.g. 1839.9999999)']},
  {rev:'2.2.0',date:'2026-10-30',notes:['Ultra: Iron Templars get articulated skeletons (hips, spine, chest, neck, head, shoulders, elbows, hands, thighs, knees, feet, cape links)','Procedural clips: idle breathing and weight shift, walk with knee bend and arm swing, aim and recoil, overhead hammer swing, hit flinch, collapse on death','Dreadnought: jointed legs, aiming gun arm, opening claw; Bondsmith servo-arm hammering; hero cape secondary motion; caster staff raise; medic healing pose; jump-pack flames']},
  {rev:'2.1.0',date:'2026-10-30',notes:['anime.js UI motion: toasts, race cards, emblems, pros/cons stagger, title intro, end screen, button bounce, power-ready pulse, resource bump, supply shake','canvas-confetti: victory, achievements, MVP, boss slain','Achievement banner','Both libraries load from CDN in the background; the game runs without them offline; respects reduced-motion']},
  {rev:'2.0.1',date:'2026-10-30',notes:['Game renamed to Dafhio Dominion']},
@@ -405,13 +406,13 @@ const dist=(a,b)=>Math.sqrt(d2(a.x,a.z,b.x,b.z));
    BALANCE DATA
    ========================================================= */
 const STDB=(n,o)=>{const k=o.hp||1;return{
- hq:{name:n[0],ic:'◎',hp:1600*k,cost:[400,0],r:3.4,supply:10,time:60,trains:['worker'],h:5.8},
- depot:{name:n[1],ic:'▣',hp:420*k,cost:[100,0],r:1.6,supply:10,time:18,h:3.2},
- barracks:{name:n[2],ic:'⌂',hp:850*k,cost:[150,0],r:2.4,time:30,trains:['t1','t2','scout','medic'],req:'depot',h:3.6},
- factory:{name:n[3],ic:'⚒',hp:950*k,cost:[150,100],r:2.6,time:40,trains:['t3','aa'],research:['w','a'],req:'barracks',h:4},
- turret:{name:n[4],ic:'⊕',hp:450*k,cost:[100,25],r:1.3,time:20,dmg:13,range:9,cd:1,proj:o.tp||'bullet',req:'barracks',h:3},
- airfield:{name:n[5],ic:'✈',hp:850*k,cost:[150,100],r:2.8,time:40,trains:['flyer'],req:'factory',h:3.8},
- academy:{name:n[6],ic:'★',hp:900*k,cost:[150,150],r:2.6,time:45,trains:['hero','caster'],req:'factory',h:5}}};
+ hq:{name:n[0],ic:'◎',hp:Math.round(1600*k),cost:[400,0],r:3.4,supply:10,time:60,trains:['worker'],h:5.8},
+ depot:{name:n[1],ic:'▣',hp:Math.round(420*k),cost:[100,0],r:1.6,supply:10,time:18,h:3.2},
+ barracks:{name:n[2],ic:'⌂',hp:Math.round(850*k),cost:[150,0],r:2.4,time:30,trains:['t1','t2','scout','medic'],req:'depot',h:3.6},
+ factory:{name:n[3],ic:'⚒',hp:Math.round(950*k),cost:[150,100],r:2.6,time:40,trains:['t3','aa'],research:['w','a'],req:'barracks',h:4},
+ turret:{name:n[4],ic:'⊕',hp:Math.round(450*k),cost:[100,25],r:1.3,time:20,dmg:13,range:9,cd:1,proj:o.tp||'bullet',req:'barracks',h:3},
+ airfield:{name:n[5],ic:'✈',hp:Math.round(850*k),cost:[150,100],r:2.8,time:40,trains:['flyer'],req:'factory',h:3.8},
+ academy:{name:n[6],ic:'★',hp:Math.round(900*k),cost:[150,150],r:2.6,time:45,trains:['hero','caster'],req:'factory',h:5}}};
 const FAC={
  vanguard:{name:'Vanguard Directive',col:{a:0x8796a4,b:0x3a4652,g:0x4cc3ff,h:0xd4dee6},team:0x4cc3ff,
   units:{
@@ -1615,73 +1616,91 @@ XHIGH.cult=(p,L,A,B,G,H,d)=>{const h=d.h,r=d.r;for(let i=0;i<4;i++)mk(cone(.04,.
 const RIGS={};
 const sm=(c,t,k)=>c+(t-c)*k;
 function rigHum(p,L,A,B,G,H,o){
-  const S=o.s||1,R={kind:'hum',o};const T=grp(0,0,0,L);T.scale.setScalar(S);R.root=T;
-  const hips=grp(0,.98,0,T);R.hips=hips;mk(box(.5,.22,.32),B,0,0,0,hips);mk(box(.54,.08,.36),H,0,.1,0,hips);
+  const S=o.s||1,R={kind:'hum',o,death:rigHumDeath};const T=grp(0,0,0,L);T.scale.setScalar(S);R.root=T;
+  const br=o.brute,sk=o.skel,sl=o.slim,lt=br?.36:.42,hy=br?.86:.98;R.hy=hy;const lw=sk?.08:br?.24:sl?.16:.2;
+  const hips=grp(0,hy,0,T);R.hips=hips;mk(box(br?.6:.5,.22,.32),B,0,0,0,hips);if(!sk)mk(box(br?.64:.54,.08,.36),H,0,.1,0,hips);
   if(o.robe){const rb=mk(cone(.42,.9,10),o.robe,0,-.4,0,hips);rb.scale.set(1,1,.85)}
-  R.legs=[];for(const sg of[-1,1]){const th=grp(sg*.15,-.06,0,hips);mk(box(.2,.42,.24),A,0,-.21,0,th);mk(box(.23,.16,.27),B,0,-.04,0,th);
-    const kn=grp(0,-.42,0,th);mk(sph(.11,8),H,0,0,.05,kn);mk(box(.18,.4,.22),B,0,-.2,0,kn);mk(box(.2,.32,.07),A,0,-.18,.12,kn);
-    const ft=grp(0,-.42,0,kn);mk(box(.22,.11,.36),B,0,-.04,.07,ft);mk(box(.22,.05,.12),A,0,0,.2,ft);R.legs.push({th,kn,ft,sg})}
-  const sp=grp(0,.12,0,hips);R.spine=sp;mk(box(.44,.18,.32),B,0,.06,0,sp);
-  const ch=grp(0,.18,0,sp);R.chest=ch;mk(box(.64*(o.w||1),.5,.42),A,0,.16,0,ch);mk(box(.36,.14,.05),H,0,.24,.22,ch);
-  for(const sg of[-1,1])mk(box(.14,.05,.05),H,sg*.2,.27,.22,ch);
+  R.legs=[];for(const sg of[-1,1]){const th=grp(sg*(br?.19:.15),-.06,0,hips);mk(box(lw,lt,lw*1.2),sk?H:A,0,-lt/2,0,th);if(!sk)mk(box(lw*1.15,.16,lw*1.35),B,0,-.04,0,th);
+    const kn=grp(0,-lt,0,th);mk(sph(sk?.06:.11,8),H,0,0,.04,kn);mk(box(lw*.9,lt*.95,lw*1.1),sk?H:B,0,-lt*.47,0,kn);if(!sk&&!sl)mk(box(lw,lt*.75,.07),A,0,-lt*.42,lw*.6,kn);
+    const ft=grp(0,-lt,0,kn);mk(box(lw*1.1,.1,.34),B,0,-.04,.07,ft);R.legs.push({th,kn,ft,sg})}
+  const sp=grp(0,.12,0,hips);R.spine=sp;R.lean=br?.32:0;if(sk)mk(box(.09,.3,.09),H,0,.1,0,sp);else mk(box(br?.56:.44,.18,.32),B,0,.06,0,sp);
+  const ch=grp(0,.18,0,sp);R.chest=ch;const cw=(o.w||1)*(br?1.35:sl?.85:1);
+  if(sk){for(let k=0;k<4;k++)mk(box(.46-k*.06,.04,.28),H,0,.02+k*.1,.02,ch);mk(sph(.08,8),G,0,.18,.06,ch);mk(box(.08,.42,.08),H,0,.18,-.08,ch)}
+  else{mk(box(.64*cw,.5,.42*(br?1.15:1)),A,0,.16,br?.05:0,ch);if(o.plate!==false)mk(box(.36*cw,.14,.05),H,0,.24,.22+(br?.05:0),ch);if(br)mk(sph(.3,10),A,0,0,.14,ch).scale.set(1.2,.8,1)}
   if(o.chestG)mk(box(.12,.12,.04),o.chestG,0,.08,.23,ch);
-  if(o.pack){mk(box(.5,.52,.26),B,0,.16,-.33,ch);mk(box(.3,.08,.04),G,0,.3,-.47,ch);R.jets=[];for(const sg of[-1,1]){mk(cyl(.07,.1,.28,8),B,sg*.15,-.12,-.38,ch);const j=mk(cone(.08,.35,8),glow(o.jetCol||0xffa040),sg*.15,-.42,-.38,ch);j.rotation.x=Math.PI;R.jets.push(j)}}
-  const nk=grp(0,.44,.02,ch);R.neck=nk;const hd=grp(0,.12,0,nk);R.head=hd;
-  if(o.helm==='hood'){mk(cone(.25,.52,10),B,0,.1,-.03,hd);mk(sph(.13,8),std(0x15161a),0,-.02,.06,hd);for(const sg of[-1,1])mk(sph(.03,6),G,sg*.05,0,.17,hd)}
-  else{mk(sph(.2,12),A,0,0,0,hd);mk(box(.27,.07,.08),G,0,.02,.16,hd);mk(box(.13,.1,.1),B,0,-.1,.15,hd);if(o.helm==='crest')mk(box(.04,.22,.42),H,0,.18,-.02,hd);if(o.laurel)for(const sg of[-1,1])mk(box(.03,.05,.22),H,sg*.18,.06,0,hd)}
-  R.arms=[];for(const sg of[-1,1]){const sh=grp(sg*.39,.3,0,ch);const pad=mk(sph(.22*(o.pad||1),12),A,sg*.07,.05,0,sh);pad.scale.set(1,.78,1.12);if(o.trim)mk(box(.05,.05,.32*(o.pad||1)),H,sg*(.2*(o.pad||1)),.08,0,sh);
-    const ua=grp(0,-.06,0,sh);mk(box(.15,.32,.16),B,0,-.16,0,ua);const el=grp(0,-.32,0,ua);mk(sph(.085,8),H,0,0,0,el);mk(box(.17,.3,.19),A,0,-.15,.01,el);
-    const hn=grp(0,-.32,0,el);mk(box(.12,.11,.13),B,0,-.04,0,hn);R.arms.push({sh,ua,el,hn,sg})}
-  const rh=R.arms[1].hn;
-  if(o.wpn==='rifle'||o.wpn==='heavy'){const hv=o.wpn==='heavy';const w=grp(0,-.06,.04,rh);mk(box(hv?.2:.11,hv?.95:.78,hv?.22:.14),B,0,-.3,0,w);mk(box(.05,.16,.06),G,0,-.08,hv?.12:.08,w);
-    if(hv)mk(cyl(.07,.07,.25,8),H,0,-.82,0,w);R.muz=grp(0,hv?-.95:-.72,0,w);mk(sph(.05,6),G,0,0,0,R.muz);R.twoHand=true}
-  else if(o.wpn==='hammer'){const w=grp(0,-.04,0,rh);mk(cyl(.035,.035,1.1,6),H,0,-.2,0,w);const hd2=mk(box(.36,.22,.22),o.wM||H,0,-.75,0,w);mk(box(.38,.06,.24),G,0,-.75,0,w);R.melee=true}
-  else if(o.wpn==='staff'){const w=grp(0,-.04,0,rh);w.rotation.x=Math.PI;mk(cyl(.03,.03,1.8,6),H,0,.25,0,w);mk(octa(.13),G,0,1.15,0,w);R.staff=true}
-  else if(o.wpn==='tool'){const w=grp(0,-.04,0,rh);mk(cyl(.03,.03,.5,6),B,0,-.2,0,w);mk(box(.22,.1,.12),H,0,-.45,0,w);R.tool=true}
-  if(o.cape){R.cape=[];let par=ch,y=.36,z=-.26;for(let i=0;i<3;i++){const c=grp(0,y,z,par);mk(box(.66*(o.w||1),.36,.035),std(o.cape),0,-.18,0,c);R.cape.push(c);par=c;y=-.36;z=0}}
+  if(o.pack){mk(box(.5,.52,.26),B,0,.16,-.33,ch);mk(box(.3,.08,.04),G,0,.3,-.47,ch);R.jets=[];for(const sg of[-1,1]){mk(cyl(.07,.1,.28,8),B,sg*.15,-.12,-.38,ch);const jt=mk(cone(.08,.35,8),glow(o.jetCol||0xffa040),sg*.15,-.42,-.38,ch);jt.rotation.x=Math.PI;R.jets.push(jt)}}
+  if(o.spikes)for(let k=0;k<3;k++)mk(cone(.05,.32,4),H,(k-1)*.16,.46,-.24,ch).rotation.x=-.6;
+  if(o.wings){R.wings=[];for(const sg of[-1,1]){const w=grp(sg*.25,.38,-.26,ch);mk(box(1.5,.05,.85),o.wingM||B,sg*.8,0,0,w);mk(box(.08,.08,1),H,sg*.8,.04,.38,w);w.rotation.y=sg*.3;R.wings.push({w,sg})}}
+  if(o.tail){R.tail=[];let par=hips;for(let k=0;k<o.tail;k++){const c=grp(0,k?0:-.05,k?-.32:-.18,par);mk(cone(.13-k*.03,.4,6),A,0,0,-.18,c).rotation.x=-Math.PI/2;R.tail.push(c);par=c}}
+  const nk=grp(0,.44,.02+(br?.12:0),ch);R.neck=nk;const hd=grp(0,.12,0,nk);R.head=hd;
+  switch(o.helm){
+    case'hood':mk(cone(.25,.52,10),B,0,.1,-.03,hd);mk(sph(.13,8),std(0x15161a),0,-.02,.06,hd);for(const sg of[-1,1])mk(sph(.03,6),G,sg*.05,0,.17,hd);break;
+    case'visor':mk(sph(.19,12),A,0,0,0,hd);mk(box(.3,.09,.1),G,0,.02,.15,hd);mk(box(.03,.2,.03),B,.13,.15,-.05,hd);break;
+    case'brute':{const q=mk(sph(.22,10),A,0,0,.04,hd);q.scale.set(1.15,.9,1.1);mk(box(.28,.09,.15),H,0,-.11,.13,hd);for(const sg of[-1,1]){mk(sph(.035,6),G,sg*.08,.04,.2,hd);mk(cone(.04,.12,4),std(0xe8e0c8),sg*.08,-.05,.2,hd)}break}
+    case'skull':{const q=mk(sph(.16,10),H,0,0,0,hd);q.scale.set(1,1.15,1.05);for(const sg of[-1,1])mk(sph(.04,6),G,sg*.065,.03,.14,hd);mk(box(.13,.06,.1),H,0,-.14,.07,hd);break}
+    case'horn':mk(sph(.19,12),A,0,0,0,hd);mk(box(.24,.06,.08),G,0,.02,.15,hd);for(const sg of[-1,1]){const h=mk(cone(.055,.4,4),H,sg*.16,.16,0,hd);h.rotation.z=-sg*.6}break;
+    case'bug':mk(cone(.3,.75,6),H,0,0,.15,hd).rotation.x=1.2;for(let k=0;k<5;k++)mk(cone(.07,.45,4),H,(k-2)*.13,.28,-.15,hd);for(const sg of[-1,1])mk(sph(.06,6),G,sg*.13,.04,.42,hd);break;
+    default:mk(sph(.2,12),A,0,0,0,hd);mk(box(.27,.07,.08),G,0,.02,.16,hd);mk(box(.13,.1,.1),B,0,-.1,.15,hd);if(o.helm==='crest')mk(box(.04,.22,.42),H,0,.18,-.02,hd);if(o.laurel)for(const sg of[-1,1])mk(box(.03,.05,.22),H,sg*.18,.06,0,hd);
+  }
+  const aw=sk?.08:br?.21:sl?.13:.15;
+  R.arms=[];for(const sg of[-1,1]){const sh=grp(sg*(.39*cw/(br?1.2:1)),.3,0,ch);if(o.pad){const pad=mk(sph(.22*o.pad,12),o.padM||A,sg*.07,.05,0,sh);pad.scale.set(1,.78,1.12)}else mk(sph(aw*.8,8),sk?H:A,0,0,0,sh);
+    if(o.trim&&o.pad)mk(box(.05,.05,.32*o.pad),H,sg*.2*o.pad,.08,0,sh);
+    const ua=grp(0,-.06,0,sh);mk(box(aw,.32,aw*1.07),sk?H:B,0,-.16,0,ua);const el=grp(0,-.32,0,ua);mk(sph(aw*.55,8),H,0,0,0,el);mk(box(aw*1.13,.3,aw*1.2),sk?H:A,0,-.15,.01,el);
+    const hn=grp(0,-.32,0,el);mk(box(aw*.8,.11,aw*.85),B,0,-.04,0,hn);R.arms.push({sh,ua,el,hn,sg})}
+  const rh=R.arms[1].hn,lh=R.arms[0].hn,w=o.wpn;
+  if(w==='rifle'||w==='heavy'||w==='flamer'){const hv=w==='heavy';const g=grp(0,-.06,.04,rh);mk(box(hv?.2:.11,hv?.95:.78,hv?.22:.14),B,0,-.3,0,g);mk(box(.05,.16,.06),G,0,-.08,hv?.12:.08,g);
+    if(hv)mk(cyl(.07,.07,.25,8),H,0,-.82,0,g);if(w==='flamer'){mk(cyl(.06,.09,.22,6),H,0,-.78,0,g);mk(sph(.07,6),G,0,-.9,0,g);mk(cyl(.09,.09,.4,8),std(0x5a4030),0,-.3,-.14,g)}R.twoHand=true}
+  else if(w==='hammer'||w==='choppa'){const g=grp(0,-.04,0,rh);mk(cyl(.035,.035,w==='choppa'?.7:1.1,6),H,0,-.2,0,g);if(w==='choppa')mk(box(.06,.4,.28),o.wM||std(0x8a8a80),0,-.55,.1,g);else{mk(box(.36,.22,.22),o.wM||H,0,-.75,0,g);mk(box(.38,.06,.24),G,0,-.75,0,g)}R.melee=true}
+  else if(w==='blades'||w==='claws'){for(const hn of[lh,rh]){const g=grp(0,-.04,0,hn);if(w==='blades')mk(box(.04,.9,.08),glow(o.bladeCol||0xc9b3ff),0,-.42,.06,g);else for(let f=0;f<3;f++){const c=mk(cone(.05,.45,4),o.wM||H,(f-1)*.07,-.25,.05,g);c.rotation.x=Math.PI}}R.dual=true}
+  else if(w==='launcher'){const tb=grp(0,.2,0,R.arms[1].sh);mk(cyl(.13,.13,1,8),std(0x4a4a3a),0,0,.05,tb).rotation.x=Math.PI/2;mk(cyl(.1,.1,.06,8),G,0,0,.56,tb).rotation.x=Math.PI/2;R.launcher=tb}
+  else if(w==='staff'){const g=grp(0,-.04,0,rh);g.rotation.x=Math.PI;mk(cyl(.03,.03,1.8,6),H,0,.25,0,g);mk(octa(.13),G,0,1.15,0,g);R.staff=true}
+  else if(w==='tool'){const g=grp(0,-.04,0,rh);mk(cyl(.03,.03,.5,6),B,0,-.2,0,g);mk(box(.22,.1,.12),H,0,-.45,0,g);R.tool=true}
+  if(o.cape){R.cape=[];let par=ch,y=.36,z=-.26;for(let k=0;k<3;k++){const c=grp(0,y,z,par);mk(box(.66*cw,.36,.035),std(o.cape),0,-.18,0,c);R.cape.push(c);par=c;y=-.36;z=0}}
   if(o.servo){const b=grp(.12,.42,-.42,ch);mk(sph(.08,6),H,0,0,0,b);const a1=grp(0,0,0,b);mk(box(.07,.07,.5),B,0,.12,.2,a1);a1.rotation.x=-.6;const a2=grp(0,.24,.42,a1);mk(sph(.06,6),H,0,0,0,a2);mk(box(.06,.06,.4),B,0,0,.2,a2);mk(box(.14,.08,.08),G,0,0,.42,a2);R.servo=[a1,a2]}
-  if(o.orbs){p.orbs=grp(0,.3,0,ch);for(let i=0;i<3;i++){const a=i*2.094;mk(sph(.07,6),G,Math.sin(a)*.55,0,Math.cos(a)*.55,p.orbs)}}
+  if(o.orbs){p.orbs=grp(0,.3,0,ch);for(let k=0;k<3;k++){const a=k*2.094;mk(sph(.07,6),G,Math.sin(a)*.55,0,Math.cos(a)*.55,p.orbs)}}
   p.head=hd;p.rig=R;R.anim=rigHumAnim;return R;
 }
 function rigHumAnim(e,p,dt){
   const R=p.rig,o=R.o,t=gtime+e.id*.37,mv=e.mv||0,ph=e.anim||0;
   if(e.recoil>.9)e.lastShot=gtime;
+  if(e.recoil>.95&&!R.lock){R.lock=1;R.side=R.side?0:1}if(e.recoil<.5)R.lock=0;
   const tgt=e.target&&!e.target.dead;const engaged=tgt?dist(e,e.target)<e.d.range+e.r+e.target.r+2.5:false;
   const aimT=(engaged||(gtime-(e.lastShot||-9))<1.6||e.healing||e.state==='cast')?1:0;R.aim=sm(R.aim||0,aimT,Math.min(1,dt*7));const aim=R.aim;
   const working=e.d.worker&&(e.state==='gather'||e.state==='build'||e.state==='busy')&&mv<.2;
-  // legs
   for(const lg of R.legs){const f=ph+(lg.sg<0?0:Math.PI),swing=Math.sin(f);
-    const th=-swing*.55*mv+(1-mv)*(lg.sg*Math.sin(t*.5)*.02),kn=(.95*Math.max(0,Math.cos(f))*mv)+.06+(1-mv)*.04;
-    lg.th.rotation.x=sm(lg.th.rotation.x,th,Math.min(1,dt*14));lg.kn.rotation.x=sm(lg.kn.rotation.x,kn,Math.min(1,dt*14));lg.ft.rotation.x=-(lg.th.rotation.x+lg.kn.rotation.x)*.75;lg.th.rotation.z=lg.sg*.03}
-  R.hips.position.y=.98-Math.abs(Math.sin(ph))*.05*mv-(1-mv)*.01+Math.sin(t*1.6)*.005;R.hips.rotation.y=Math.sin(ph)*.12*mv;R.hips.rotation.z=Math.sin(t*.5)*.02*(1-mv);
-  // spine and chest
-  R.spine.rotation.x=.1*mv+aim*.04-e.hitT*.2;R.chest.rotation.y=-Math.sin(ph)*.16*mv;R.chest.rotation.x=Math.sin(t*1.6)*.025-e.recoil*.08*(R.twoHand?1:0)-e.hitT*.15;
-  R.head.rotation.x=(R.head.rotation.x||0)*.0-e.hitT*.25+aim*.05;
-  // arms
-  const L0=R.arms[0],R0=R.arms[1],sw=Math.sin(ph)*mv;
-  let lx,lz,le,rx,rz,re;
-  if(R.twoHand){lx=sm(-.55,-1.25,aim);lz=sm(.25,.5,aim);le=sm(-1.1,-.35,aim);rx=sm(-.45,-1.45,aim)+e.recoil*.25;rz=sm(-.1,-.08,aim);re=sm(-1.2,-.08,aim);lx+=sw*.06;rx+=sw*.06}
-  else if(R.melee){lx=sw*.45+aim*-.3;lz=.12;le=-.3-aim*.4;const up=sm(.1+sw*-.3,-2.4,aim);rx=sm(up,.5,e.recoil);rz=-.12;re=sm(-.25,-.5,aim)+e.recoil*.4;R.chest.rotation.y+=e.recoil*.35}
-  else if(R.staff){lx=sw*.4;lz=.12;le=-.25;rx=sm(-.35+sw*-.3,-2.5,aim);rz=-.15;re=sm(-.5,-.15,aim)}
+    const th=-swing*.55*mv+(1-mv)*(lg.sg*Math.sin(t*.5)*.02),kn=(.95*Math.max(0,Math.cos(f))*mv)+.06+(1-mv)*.04+(o.brute?.12:0);
+    lg.th.rotation.x=sm(lg.th.rotation.x,th-(o.brute?.06:0),Math.min(1,dt*14));lg.kn.rotation.x=sm(lg.kn.rotation.x,kn,Math.min(1,dt*14));lg.ft.rotation.x=-(lg.th.rotation.x+lg.kn.rotation.x)*.75;lg.th.rotation.z=lg.sg*(o.brute?.08:.03)}
+  R.hips.position.y=R.hy-Math.abs(Math.sin(ph))*.05*mv-(1-mv)*.01+Math.sin(t*1.6)*.005-(o.brute?.04:0);R.hips.rotation.y=Math.sin(ph)*.12*mv;R.hips.rotation.z=Math.sin(t*.5)*.02*(1-mv)+(o.brute?Math.sin(ph)*.08*mv:0);
+  R.spine.rotation.x=R.lean+.1*mv+aim*.04-e.hitT*.2;R.chest.rotation.y=-Math.sin(ph)*.16*mv;R.chest.rotation.x=Math.sin(t*1.6)*.025-e.recoil*.08*(R.twoHand?1:0)-e.hitT*.15-(o.brute?.15:0);
+  R.head.rotation.x=-e.hitT*.25+aim*.05+(o.brute?-.2:0);if(o.skel)R.head.rotation.z=Math.sin(t*6.3)*Math.sin(t*.7)*.08;
+  const L0=R.arms[0],R0=R.arms[1],sw=Math.sin(ph)*mv;let lx,lz,le,rx,rz,re;
+  if(R.twoHand){lx=sm(-.55,-1.25,aim);lz=sm(.25,.5,aim);le=sm(-1.1,-.35,aim);rx=sm(-.45,-1.45,aim)+e.recoil*.25;rz=-.08;re=sm(-1.2,-.08,aim);lx+=sw*.06;rx+=sw*.06}
+  else if(R.melee){lx=sw*.45+aim*-.3;lz=.12;le=-.3-aim*.4;const up=sm(.1-sw*.3,-2.4,aim);rx=sm(up,.5,e.recoil);rz=-.12;re=sm(-.25,-.5,aim)+e.recoil*.4;R.chest.rotation.y+=e.recoil*.35}
+  else if(R.dual){const a=R.side?e.recoil:0,b=R.side?0:e.recoil;const ready=sm(sw*.4,-1.3,aim);lx=sm(ready,.6,b);rx=sm(-sw*.4*(1-aim)+aim*-1.3,.6,a);lz=.2+aim*.2;rz=-.2-aim*.2;le=sm(-.3,-1,aim)+b*.8;re=sm(-.3,-1,aim)+a*.8;R.chest.rotation.y+=(a-b)*.4}
+  else if(R.launcher){lx=sm(sw*.4,-1,aim);lz=sm(.12,.55,aim);le=-.8*aim-.2;rx=sm(-.6,-1.25,aim);rz=-.1;re=-1.5;R.launcher.rotation.x=-aim*.06+e.recoil*.35}
+  else if(R.staff){lx=sw*.4;lz=.12;le=-.25;rx=sm(-.35-sw*.3,-2.5,aim);rz=-.15;re=sm(-.5,-.15,aim)}
   else if(R.tool){lx=sw*.4;lz=.12;le=-.3;const hit=working?Math.sin(t*9):0;rx=working?-1.2+hit*.7:-.3-sw*.4;rz=-.1;re=working?-1+hit*.4:-.4}
-  else{lx=sw*.45;lz=.12;le=-.3;rx=e.healing?-1.35:-sw*.45;rz=-.12;re=e.healing?-.1:-.3}
+  else{lx=sw*.45;lz=.12;le=-.3;rx=-sw*.45;rz=-.12;re=-.3}
+  if(e.healing&&!R.twoHand){rx=-1.35;re=-.1}
   const k=Math.min(1,dt*16);
-  L0.sh.rotation.x=sm(L0.sh.rotation.x,lx,k);L0.sh.rotation.z=sm(L0.sh.rotation.z,lz,k);L0.el.rotation.x=sm(L0.el.rotation.x,le,k);
+  L0.sh.rotation.x=sm(L0.sh.rotation.x,lx,R.dual&&e.recoil>.5?1:k);L0.sh.rotation.z=sm(L0.sh.rotation.z,lz,k);L0.el.rotation.x=sm(L0.el.rotation.x,le,k);
   R0.sh.rotation.x=sm(R0.sh.rotation.x,rx,e.recoil>.5?1:k);R0.sh.rotation.z=sm(R0.sh.rotation.z,rz,k);R0.el.rotation.x=sm(R0.el.rotation.x,re,k);
   if(R.cape)R.cape.forEach((c,i)=>{c.rotation.x=sm(c.rotation.x,(i?.12:.06)+mv*(.35+i*.12)+Math.sin(t*3.2-i*.8)*(.05+.08*mv),Math.min(1,dt*6))});
-  if(R.jets){const f=.5+mv*.9+Math.random()*.3;for(const j of R.jets)j.scale.set(1,f,1);if(mv>.5&&GQ>=2&&Math.random()<dt*20)sparks(e.x-Math.sin(e.face)*.4,1.1,e.z-Math.cos(e.face)*.4,0xffa040,1,.6,.3,-.2,-.2)}
-  if(R.servo){const w=working?Math.sin(t*7):Math.sin(t*1.2)*.2;R.servo[0].rotation.x=-.6+w*.25;R.servo[1].rotation.x=.4+w*.5;if(working&&Math.random()<dt*6)sparks(e.x+Math.sin(e.face)*.6,.9,e.z+Math.cos(e.face)*.6,0xffd27a,2,2,.25,1)}
+  if(R.jets){const f=.5+mv*.9+Math.random()*.3;for(const j of R.jets)j.scale.set(1,f,1);if(mv>.5&&Math.random()<dt*20)sparks(e.x-Math.sin(e.face)*.4,1.1,e.z-Math.cos(e.face)*.4,o.jetCol||0xffa040,1,.6,.3,-.2,-.2)}
+  if(R.servo){const wv=working?Math.sin(t*7):Math.sin(t*1.2)*.2;R.servo[0].rotation.x=-.6+wv*.25;R.servo[1].rotation.x=.4+wv*.5;if(working&&Math.random()<dt*6)sparks(e.x+Math.sin(e.face)*.6,.9,e.z+Math.cos(e.face)*.6,0xffd27a,2,2,.25,1)}
+  if(R.wings){const fast=mv>.3||aim>.5,fl=Math.sin(t*(fast?7:2.2))*(fast?.55:.15);for(const w of R.wings)w.w.rotation.z=w.sg*(.25+fl)}
+  if(R.tail)R.tail.forEach((c,i)=>{c.rotation.y=Math.sin(t*2.5-i*.8)*(.15+.25*mv);c.rotation.x=Math.sin(t*1.7-i*.6)*.08});
 }
-function rigHumDeath(R,k){if(!R)return;const f=Math.min(1,k*2.2);for(const lg of R.legs||[]){lg.kn.rotation.x=f*1.5;lg.th.rotation.x=-f*1.1;lg.ft.rotation.x=f*.3}
-  for(const a of R.arms||[]){a.sh.rotation.x=sm(a.sh.rotation.x,-.3,f);a.sh.rotation.z=a.sg*f*.6;a.el.rotation.x=-f*.2}if(R.chest)R.chest.rotation.x=f*.5;if(R.head)R.head.rotation.x=f*.45;if(R.hips)R.hips.position.y=.98-f*.45}
-function rigDread(p,L,A,B,G,H){
-  const R={kind:'dread'},T=grp(0,0,0,L);R.root=T;const hips=grp(0,1.72,0,T);R.hips=hips;mk(box(1.05,.36,.72),B,0,0,0,hips);
+function rigHumDeath(R,k){if(!R)return;const f=Math.min(1,k*2.2);if(R.wings)for(const w of R.wings)w.w.rotation.z=w.sg*(.25-f*1.2);for(const lg of R.legs||[]){lg.kn.rotation.x=f*1.5;lg.th.rotation.x=-f*1.1;lg.ft.rotation.x=f*.3}if(R.hy)R.hips.position.y=R.hy-f*.45;
+  for(const a of R.arms||[]){a.sh.rotation.x=sm(a.sh.rotation.x,-.3,f);a.sh.rotation.z=a.sg*f*.6;a.el.rotation.x=-f*.2}if(R.chest)R.chest.rotation.x=f*.5;if(R.head)R.head.rotation.x=f*.45;}
+function rigDread(p,L,A,B,G,H,o){
+  o=o||{};const R={kind:'dread',death:rigDreadDeath},T=grp(0,0,0,L);T.scale.setScalar(o.s||1);R.root=T;const hips=grp(0,1.72,0,T);R.hips=hips;mk(box(1.05,.36,.72),B,0,0,0,hips);
   R.legs=[];for(const sg of[-1,1]){const th=grp(sg*.58,0,0,hips);mk(sph(.27,10),H,0,0,0,th);mk(box(.38,.76,.44),A,0,-.38,0,th);mk(box(.42,.2,.48),B,0,-.12,0,th);
     const kn=grp(0,-.78,0,th);mk(sph(.21,10),H,0,0,.04,kn);mk(box(.32,.78,.38),B,0,-.39,0,kn);mk(cyl(.05,.05,.7,6),H,0,-.32,-.22,kn);mk(box(.36,.36,.08),A,0,-.25,.21,kn);
     const ft=grp(0,-.8,0,kn);mk(box(.58,.17,.82),A,0,-.07,.1,ft);for(const x of[-.18,0,.18])mk(box(.12,.1,.36),B,x,-.1,.55,ft);R.legs.push({th,kn,ft,sg})}
   const ch=grp(0,.2,0,hips);R.chest=ch;mk(box(1.32,1.05,1.12),A,0,.55,0,ch);mk(box(.68,.68,.09),H,0,.6,.57,ch);mk(box(.42,.08,.05),G,0,.78,.63,ch);
   for(const sg of[-1,1])mk(cyl(.1,.13,.9,8),B,sg*.4,1.3,-.45,ch);
-  mk(cyl(.03,.03,1.6,4),B,-.4,1.6,-.52,ch);const ban=grp(-.15,1.95,-.52,ch);mk(box(.5,.72,.03),std(0x8a2424),0,-.36,0,ban);mk(box(.2,.2,.04),H,0,-.3,.01,ban);R.banner=ban;
+  mk(cyl(.03,.03,1.6,4),B,-.4,1.6,-.52,ch);const ban=grp(-.15,1.95,-.52,ch);mk(box(.5,.72,.03),std(o.banner||0x8a2424),0,-.36,0,ban);if(o.spikes)for(let k=0;k<5;k++)mk(cone(.08,.45,4),H,(k-2)*.25,1.1,-.4,ch).rotation.x=-.5;mk(box(.2,.2,.04),H,0,-.3,.01,ban);R.banner=ban;
   const hd=grp(0,1.15,.3,ch);mk(box(.42,.26,.36),B,0,0,0,hd);mk(box(.32,.06,.06),G,0,0,.19,hd);R.head=hd;p.head=hd;
   R.arms=[];for(const sg of[-1,1]){const sh=grp(sg*.88,.7,.08,ch);mk(sph(.28,10),H,0,0,0,sh);const ua=grp(0,0,0,sh);mk(box(.36,.36,.55),B,0,-.05,.25,ua);const el=grp(0,-.05,.5,ua);mk(sph(.17,8),H,0,0,0,el);
     const fa=grp(0,0,0,el);if(sg<0){mk(box(.34,.34,.9),A,0,0,.42,fa);mk(cyl(.08,.08,.35,8),G,0,0,.95,fa).rotation.x=Math.PI/2;R.muz=fa}
@@ -1699,6 +1718,142 @@ function rigDreadAnim(e,p,dt){const R=p.rig,t=gtime+e.id*.3,mv=e.mv||0,ph=e.anim
   const open=R.aim*(1-e.recoil)*.6+.05;R.fingers.forEach((fg,i)=>{fg.rotation.y=(i-1)*open;fg.rotation.x=-open*.4});
   R.banner.rotation.x=.1+mv*.35+Math.sin(t*3)*.08*(1+mv)}
 function rigDreadDeath(R,k){const f=Math.min(1,k*2);for(const lg of R.legs){lg.kn.rotation.x=f*1.2;lg.th.rotation.x=-f*.6}for(const a of R.arms)a.sh.rotation.x=f*.6;R.hips.position.y=1.72-f*.8}
+
+function rigBug(p,L,A,B,G,H,o){
+  const S=o.s||1,R={kind:'bug',o,death:rigBugDeath},T=grp(0,0,0,L);T.scale.setScalar(S);R.root=T;
+  const y=o.y||.6,body=grp(0,y,0,T);R.body=body;R.by=y;
+  if(o.mech){mk(cyl(.5,.58,.34,6),A,0,0,0,body);mk(cyl(.36,.42,.2,6),B,0,.24,0,body);mk(box(.7,.05,.05),G,0,0,.52,body)}
+  else{const th=mk(sph(.34,10),A,0,0,0,body);th.scale.set(1,.72,1.25);
+    R.abd=grp(0,.05,-.35,body);const ab=mk(sph(o.abd||.38,10),A,0,0,-.25,R.abd);ab.scale.set(1,.8,1.3);if(o.sac)R.sac=mk(sph(.22,8),G,0,.24,-.3,R.abd);
+    if(o.eggs){R.eggs=grp(0,.32,-.28,R.abd);for(let k=0;k<3;k++)mk(sph(.17,8),G,(k-1)*.22,0,(k%2)*.14,R.eggs)}
+    if(o.chimneys){R.gun=grp(0,.35,-.25,R.abd);for(const [x,z] of[[-.3,.15],[.3,.15],[0,-.28]]){mk(cone(.2,.7,6),H,x,.25,z,R.gun);mk(sph(.13,6),G,x,.62,z,R.gun)}}}
+  if(o.spikes)for(let k=0;k<o.spikes;k++)mk(cone(.06,.32,4),H,0,.24,.15-k*.18,body).rotation.x=-.6;
+  if(o.plates)for(let k=0;k<3;k++)mk(cone(.28,.75,5),H,0,.42,.25-k*.38,body).rotation.x=-.5;
+  if(!o.mech){R.neck=grp(0,0,.38,body);let hp=R.neck;if(o.neckUp){const n2=grp(0,.12,.08,R.neck);mk(cone(.15,.45,6),B,0,.12,.05,n2).rotation.x=.6;hp=n2;R.neck2=n2}
+    R.head=grp(0,o.neckUp?.3:0,o.neckUp?.2:.12,hp);mk(cone(.2,.5,6),B,0,0,.22,R.head).rotation.x=Math.PI/2;for(const sg of[-1,1])mk(sph(.05,6),G,sg*.09,.08,.3,R.head);
+    R.mand=[];if(o.mand!==false)for(const sg of[-1,1]){const m=grp(sg*.08,-.05,.38,R.head);mk(cone(.04,.28,4),H,0,0,.12,m).rotation.x=Math.PI/2;R.mand.push({m,sg})}}
+  else{R.gun=grp(0,.45,.05,body);if(o.cannon){mk(box(.5,.4,.6),B,0,0,0,R.gun);mk(cyl(.15,.2,1.6,8),B,0,.05,.8,R.gun).rotation.x=Math.PI/2;mk(sph(.5,10),H,0,.3,-.1,R.gun).scale.set(1,.6,1)}
+    else{mk(octa(.25),o.crys||G,0,.1,0,R.gun).scale.set(1,1.5,1);mk(sph(.1,6),G,0,.1,.26,R.gun)}}
+  if(o.tail){R.tail=[];let par=R.abd||body,z=R.abd?-.6:-.4;for(let k=0;k<o.tail;k++){const c=grp(0,0,k?-.3:z,par);mk(sph(.17-k*.03,8),A,0,0,-.15,c);if(k===o.tail-1)mk(cone(.08,.4,4),H,0,0,-.4,c).rotation.x=-Math.PI/2;R.tail.push(c);par=c}}
+  if(o.claws){R.claws=[];for(const sg of[-1,1]){const c=grp(sg*.38,.1,.35,body);mk(box(.12,.12,.55),B,0,0,.25,c);const f=grp(0,0,.5,c);mk(cone(.07,.6,4),H,0,0,.25,f).rotation.x=Math.PI/2;c.userData.f=f;R.claws.push({c,sg})}}
+  if(o.wings){R.wings=[];for(const sg of[-1,1]){const w=grp(sg*.2,.2,-.05,body);mk(box(.7,.02,.4),matc('wing',()=>new THREE.MeshLambertMaterial({color:0xd0a0b0,transparent:true,opacity:.6})),sg*.35,0,0,w);R.wings.push({w,sg})}}
+  const n=o.legs||6,pairs=n/2,lf=o.lf||.45,lt=o.dangle?.3:Math.max(.2,(y-.45*lf)/.88),rr=o.lr||.04;R.legs=[];
+  for(let i=0;i<pairs;i++){const z=pairs===1?0:(.28-(i/(pairs-1))*.56)*(o.spread||1);for(const sg of[-1,1]){const hip=grp(sg*(o.mech?.38:.24),0,z,body);hip.rotation.y=sg*z*1.1;
+    const fe=grp(0,0,0,hip);fe.rotation.z=sg*1.1;mk(cyl(rr,rr*.8,lf,5),B,0,-lf/2,0,fe);const kn=grp(0,-lf,0,fe);mk(sph(rr*1.3,6),H,0,0,0,kn);kn.rotation.z=-sg*1.6;mk(cyl(rr*.8,rr*.4,lt,5),o.mech?A:B,0,-lt/2,0,kn);
+    R.legs.push({hip,fe,kn,sg,g:(i+(sg>0?1:0))%2,z})}}
+  p.rig=R;R.anim=rigBugAnim;p.head=null;return R;
+}
+function rigBugAnim(e,p,dt){const R=p.rig,o=R.o,t=gtime+e.id*.41,mv=e.mv||0,ph=(e.anim||0)*(o.gait||1.4),k=Math.min(1,dt*14);
+  if(e.recoil>.9)e.lastShot=gtime;const aim=(e.target&&!e.target.dead)||(gtime-(e.lastShot||-9))<1.2||e.state==='cast'||e.healing?1:0;R.aim=sm(R.aim||0,aim,Math.min(1,dt*6));
+  if(e.recoil>.95&&!R.lock){R.lock=1;R.cs=((R.cs|0)+1)%2}if(e.recoil<.5)R.lock=0;
+  for(const lg of R.legs){if(o.dangle){lg.fe.rotation.z=lg.sg*(.5+Math.sin(t*3+lg.z*5)*.15);lg.kn.rotation.z=-lg.sg*.6;continue}
+    const f=ph+(lg.g?Math.PI:0),lift=Math.max(0,Math.sin(f))*mv,str=Math.cos(f)*mv;
+    lg.hip.rotation.y=lg.sg*lg.z*1.1+str*.35*lg.sg;
+    lg.fe.rotation.z=sm(lg.fe.rotation.z,lg.sg*(1.1+lift*.45+(1-mv)*Math.sin(t*1.3+lg.z*4)*.03),k);
+    lg.kn.rotation.z=sm(lg.kn.rotation.z,-lg.sg*(1.6-lift*.3),k)}
+  const bob=o.hover?Math.sin(t*3)*.08:Math.abs(Math.sin(ph*2))*.03*mv;R.body.position.y=R.by+bob+Math.sin(t*1.5)*.01;
+  R.body.rotation.z=Math.sin(ph)*.05*mv;R.body.rotation.x=-e.hitT*.15+(o.hover?mv*.15:0);
+  if(R.abd){R.abd.rotation.x=Math.sin(t*2)*.05;R.abd.scale.setScalar(1+Math.sin(t*2.2)*.03)}
+  if(R.sac)R.sac.scale.setScalar(1+Math.sin(t*4)*.12+e.recoil*.35);
+  if(R.eggs)R.eggs.children.forEach((c,i)=>c.scale.setScalar(1+Math.sin(t*3+i)*.15+(e.state==='cast'?.3:0)));
+  if(R.head){R.head.position.z=(o.neckUp?.2:.12)+e.recoil*.25;R.head.rotation.x=Math.sin(t*2.3)*.06-e.recoil*.2;R.head.rotation.y=(e.look||0)*.6}
+  if(R.neck2)R.neck2.rotation.x=sm(R.neck2.rotation.x,-R.aim*.4+e.recoil*.5,k);
+  if(R.mand){const op=.25+R.aim*.25+e.recoil*.5;for(const m of R.mand)m.m.rotation.y=m.sg*op}
+  if(R.tail)R.tail.forEach((c,i)=>{c.rotation.y=Math.sin(t*2.5-i*.8)*(.15+.25*mv);c.rotation.x=Math.sin(t*1.7-i*.6)*.08+(o.sting?-R.aim*.35:0)});
+  if(R.claws)R.claws.forEach((c,i)=>{const a=(i===(R.cs|0))?e.recoil:0;c.c.rotation.x=sm(c.c.rotation.x,-.5*R.aim+a*1.1-.1,e.recoil>.5?1:k);c.c.rotation.y=c.sg*(.3-a*.5);c.c.userData.f.rotation.x=.4*R.aim-a*.6});
+  if(R.gun){R.gun.position.z=(R.abd?-.25:.05)-e.recoil*.2;if(R.abd)R.gun.scale.setScalar(1+e.recoil*.2)}
+  if(R.wings)for(const w of R.wings)w.w.rotation.z=w.sg*Math.sin(t*30)*.5;
+}
+function rigBugDeath(R,k){const f=Math.min(1,k*2.5);for(const lg of R.legs){lg.fe.rotation.z=lg.sg*(1.1-f*1.4);lg.kn.rotation.z=-lg.sg*(1.6+f*.8)}R.body.position.y=R.by*(1-f*.6)}
+function rigJelly(p,L,A,B,G,H,o){const R={kind:'jelly',o},T=grp(0,0,0,L);R.root=T;const y=o.y||1.4,hd=grp(0,y,0,T);R.body=hd;R.by=y;
+  if(o.oracle){const q=mk(sph(.45,14),A,0,0,0,hd);q.scale.set(1,.8,1.1);mk(box(.5,.08,.1),B,0,0,.43,hd);for(let i=0;i<3;i++)mk(sph(.06,6),G,(i-1)*.15,.01,.48,hd);p.orbs=grp(0,0,0,hd);for(let k=0;k<2;k++){const tr=mk(tor(.75+k*.15,.025,3,22),glow(0xc6a8ff),0,0,0,p.orbs);tr.rotation.set(Math.PI/2+k*.7,0,k*.5)}}
+  else{R.bell=mk(sph(.55,14),A,0,0,0,hd);R.bell.scale.set(1,.65,1);mk(sph(.25,10),G,0,-.1,0,hd)}
+  R.ten=[];const n=o.n||5;for(let i=0;i<n;i++){const a=i/n*6.283;let par=grp(Math.sin(a)*.3,-.22,Math.cos(a)*.3,hd);const chn=[par];for(let j=0;j<4;j++){mk(cyl(.045-j*.008,.035-j*.008,.3,5),j%2?H:B,0,-.15,0,par);const nx=grp(0,-.3,0,par);chn.push(nx);par=nx}mk(sph(.05,6),G,0,0,0,par);R.ten.push(chn)}
+  R.death=(R,k)=>{R.body.position.y=R.by*(1-k*.7);R.ten.forEach(c=>c.forEach(j=>j.rotation.x=k*.6))};
+  R.anim=(e,p,dt)=>{const t=gtime+e.id*.3,mv=e.mv||0;R.body.position.y=R.by+Math.sin(t*2)*.1;if(R.bell){const q=Math.sin(t*3);R.bell.scale.set(1+q*.06,.65-q*.05,1+q*.06)}
+    R.ten.forEach((ch,i)=>ch.forEach((j,d)=>{j.rotation.x=Math.sin(t*2.6-d*.7+i)*(.15+.08*d)+mv*.25+(e.healing||e.state==='cast'?-.2:0);j.rotation.z=Math.cos(t*2.1-d*.6+i*1.3)*(.1+.05*d)}))};
+  p.rig=R;p.head=null;return R}
+function rigSerp(p,L,A,B,G,H){const R={kind:'serp'},T=grp(0,0,0,L);R.root=T;const base=grp(0,1.1,.35,T);R.body=base;
+  R.head=grp(0,.1,.05,base);mk(sph(.16,10),H,0,0,0,R.head);for(const sg of[-1,1])mk(sph(.04,6),G,sg*.06,.02,.14,R.head);mk(box(.13,.06,.1),H,0,-.13,.07,R.head);
+  R.seg=[];let par=base;for(let i=0;i<6;i++){const c=grp(0,i?-.04:-.05,i?-.3:-.15,par);mk(sph(.2-i*.025,8),A,0,0,-.12,c);if(i<4)mk(cone(.04,.2,4),H,0,.15,-.1,c);R.seg.push(c);par=c}mk(sph(.06,6),G,0,0,-.1,par);
+  R.claws=[];for(const sg of[-1,1]){const a=grp(sg*.28,-.05,.05,base);mk(box(.06,.06,.5),B,0,0,.25,a);const f=grp(0,0,.5,a);mk(cone(.05,.4,4),H,0,0,.2,f).rotation.x=Math.PI/2;R.claws.push({a,f,sg})}
+  R.death=(R,k)=>{R.seg.forEach(c=>c.rotation.x=k*.4);R.body.position.y=1.1-k*.8};
+  R.anim=(e,p,dt)=>{const t=gtime+e.id*.5,mv=e.mv||0;if(e.recoil>.95&&!R.lock){R.lock=1;R.cs=((R.cs|0)+1)%2}if(e.recoil<.5)R.lock=0;
+    R.body.position.y=1.1+Math.sin(t*2)*.08;R.seg.forEach((c,i)=>{c.rotation.y=Math.sin(t*4-i*.9)*(.18+.15*mv);c.rotation.x=Math.sin(t*2-i*.5)*.06});R.head.rotation.x=-e.recoil*.3;R.head.rotation.y=(e.look||0)*.5;
+    R.claws.forEach((c,i)=>{const a=e.recoil*((i+(R.cs|0))%2);c.a.rotation.x=-.3-a*.9+Math.sin(t*3+i)*.05;c.a.rotation.y=c.sg*(.2-a*.5);c.f.rotation.x=.3-a*.5})};
+  p.rig=R;p.head=null;return R}
+function rigWing(p,L,A,B,G,H,o){const R={kind:'wing',o},T=grp(0,0,0,L);R.root=T;const body=grp(0,0,0,T);R.body=body;
+  const b=mk(sph(o.r0||.45,10),A,0,0,0,body);b.scale.set(.8,.65,1.6);
+  R.neck=[];let par=body;for(let i=0;i<2;i++){const c=grp(0,i?0:.05,i?.25:.6,par);mk(sph(.17-i*.03,8),A,0,0,.12,c);R.neck.push(c);par=c}
+  R.head=grp(0,0,.26,par);mk(cone(.18,.5,6),B,0,0,.2,R.head).rotation.x=Math.PI/2;for(const sg of[-1,1]){mk(sph(.05,6),G,sg*.09,.08,.18,R.head);if(o.horns)mk(cone(.05,.35,4),H,sg*.12,.15,0,R.head).rotation.x=-.6}
+  R.tail=[];par=body;for(let i=0;i<4;i++){const c=grp(0,0,i?-.32:-.65,par);mk(sph(.13-i*.025,8),A,0,0,-.14,c);R.tail.push(c);par=c}mk(cone(.07,.35,4),H,0,0,-.3,par).rotation.x=-Math.PI/2;
+  const wm=o.memb||matc('memb',()=>new THREE.MeshLambertMaterial({color:0x9a2a4a,transparent:true,opacity:.75,side:THREE.DoubleSide}));
+  R.wings=[];for(const sg of[-1,1]){const sh=grp(sg*.3,.12,0,body);mk(box(1,.04,.9),wm,sg*.5,0,0,sh);mk(box(1,.07,.07),H,sg*.5,.03,.42,sh);const el=grp(sg*1,0,0,sh);mk(box(.95,.04,.75),wm,sg*.47,0,-.05,el);mk(box(.95,.06,.06),H,sg*.47,.03,.32,el);mk(cone(.05,.25,4),H,sg*.95,0,.33,el).rotation.z=-sg*Math.PI/2;R.wings.push({sh,el,sg})}
+  R.death=(R,k)=>{for(const w of R.wings){w.sh.rotation.z=w.sg*(-.2-k*1.1);w.el.rotation.z=w.sg*(-k*.8)}};
+  R.anim=(e,p,dt)=>{const t=gtime+e.id*.33,mv=e.mv||0,rate=mv>.3?7:3.6,fl=Math.sin(t*rate);
+    for(const w of R.wings){w.sh.rotation.z=w.sg*(fl*.55+.12);w.el.rotation.z=w.sg*(Math.sin(t*rate-.7)*.45)}R.body.position.y=-fl*.08;R.body.rotation.x=-mv*.08-e.hitT*.2;
+    R.neck.forEach((c,i)=>{c.rotation.x=Math.sin(t*2-i*.6)*.08-e.recoil*.25;c.rotation.y=Math.sin(t*1.3-i*.5)*.1});R.head.rotation.x=-e.recoil*.3;
+    R.tail.forEach((c,i)=>{c.rotation.y=Math.sin(t*2.2-i*.8)*(.15+.1*i);c.rotation.x=Math.sin(t*rate-i*.6)*.06})};
+  p.rig=R;p.head=null;p.gun=null;return R}
+function rigBird(p,L,A,B,G,H){const R={kind:'bird'},T=grp(0,0,0,L);R.root=T;const hy=1.9,hips=grp(0,hy,0,T);R.hips=hips;R.hy=hy;
+  mk(box(1.5,.8,1.6),A,0,.25,0,hips);mk(box(1.1,.3,1.2),H,0,.75,-.1,hips);mk(box(.7,.18,.06),G,0,.32,.81,hips);for(const sg of[-1,1])mk(box(.3,.4,.8),B,sg*.95,.45,-.1,hips);
+  R.head=grp(0,.95,.2,hips);mk(box(.36,.16,.3),B,0,0,0,R.head);mk(box(.3,.05,.05),G,0,0,.16,R.head);
+  R.gun=grp(0,.3,.6,hips);mk(cyl(.16,.2,1.9,8),B,0,0,.8,R.gun).rotation.x=Math.PI/2;mk(cyl(.2,.2,.1,8),G,0,0,1.75,R.gun).rotation.x=Math.PI/2;
+  R.legs=[];for(const sg of[-1,1]){const th=grp(sg*.62,-.1,0,hips);mk(sph(.25,8),H,0,0,0,th);mk(box(.32,.9,.38),B,0,-.45,0,th);const kn=grp(0,-.9,0,th);mk(sph(.18,8),H,0,0,0,kn);mk(box(.28,1,.32),A,0,-.5,0,kn);mk(cyl(.04,.04,.8,4),H,0,-.4,.2,kn);
+    const an=grp(0,-1,0,kn);mk(box(.5,.15,.75),A,0,-.07,.12,an);for(const x of[-.15,.15])mk(box(.1,.08,.3),B,x,-.1,.5,an);R.legs.push({th,kn,an,sg})}
+  R.death=(R,k)=>{const f=Math.min(1,k*2);for(const lg of R.legs){lg.th.rotation.x=-.5-f*.6;lg.kn.rotation.x=1+f*.9}R.hips.position.y=R.hy-f*1.1};
+  R.anim=(e,p,dt)=>{const t=gtime+e.id*.3,mv=e.mv||0,ph=(e.anim||0)*.85,k=Math.min(1,dt*12);if(e.recoil>.9)e.lastShot=gtime;
+    for(const lg of R.legs){const f=ph+(lg.sg<0?0:Math.PI);lg.th.rotation.x=sm(lg.th.rotation.x,-.5-Math.sin(f)*.45*mv,k);lg.kn.rotation.x=sm(lg.kn.rotation.x,1+Math.max(0,Math.cos(f))*.6*mv,k);lg.an.rotation.x=-(lg.th.rotation.x+lg.kn.rotation.x)}
+    R.hips.position.y=R.hy-.12-Math.abs(Math.sin(ph))*.12*mv+Math.sin(t*1.4)*.015;R.hips.rotation.z=Math.sin(ph)*.05*mv;R.hips.rotation.x=-e.hitT*.1-e.recoil*.06;
+    R.gun.position.z=.6-e.recoil*.35;R.head.rotation.y=Math.sin(t*.8)*.6*(1-((gtime-(e.lastShot||-9))<1.5?1:0))};
+  p.rig=R;p.head=null;p.gun=null;return R}
+const MEMB2=()=>matc('memb2',()=>new THREE.MeshLambertMaterial({color:0x3a1012,transparent:true,opacity:.85,side:THREE.DoubleSide}));
+Object.assign(RIGS,{
+ vanguard_t1:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'visor',pad:1,wpn:'rifle',plate:false,chestG:G}),
+ vanguard_t2:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.1,helm:'visor',pad:1.1,wpn:'launcher',plate:false,pack:1,jetCol:0x4cc3ff}),
+ vanguard_t3:(p,L,A,B,G,H)=>rigBird(p,L,A,B,G,H),
+ vanguard_medic:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'visor',pack:1,wpn:'none',plate:false,chestG:glow(0xff4466),jetCol:0x7dffc0}),
+ vanguard_hero:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.2,helm:'crest',pad:1.4,padM:std(0xd9a441,0x2a1a00),trim:1,cape:0x6a1020,wpn:'heavy'}),
+ vanguard_caster:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'hood',robe:A,wpn:'staff',orbs:1,plate:false}),
+ swarm_worker:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{legs:4,y:.85,hover:1,dangle:1,wings:1,tail:1,mand:false}),
+ swarm_t1:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{legs:4,y:.55,lf:.42,spikes:3,tail:1,gait:1.6}),
+ swarm_t2:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{legs:4,y:.7,abd:.48,sac:1,neckUp:1}),
+ swarm_t3:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{s:1.35,legs:4,y:1.05,lf:.75,lr:.12,abd:.6,plates:1,claws:1,tail:3,gait:1}),
+ swarm_scout:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{s:.6,legs:6,y:.5,gait:2}),
+ swarm_medic:(p,L,A,B,G,H)=>rigJelly(p,L,A,B,G,H,{y:1.4,n:5}),
+ swarm_aa:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{s:1.25,legs:6,y:.8,lf:.55,lr:.06,abd:.55,chimneys:1,gait:1.1}),
+ swarm_flyer:(p,L,A,B,G,H)=>rigWing(p,L,A,B,G,H,{}),
+ swarm_hero:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.4,brute:1,helm:'bug',wpn:'claws',tail:3,spikes:1,plate:false}),
+ swarm_caster:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{legs:6,y:.75,lf:.5,abd:.6,eggs:1}),
+ swarm_brood:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{s:.65,legs:4,y:.5,gait:2}),
+ covenant_t1:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{slim:1,helm:'crest',pad:.8,wpn:'blades',chestG:G}),
+ covenant_t2:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{mech:1,legs:4,y:1.4,lf:.8,lr:.06,spread:1.4,crys:CRYS(),gait:1.1}),
+ covenant_hero:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.2,slim:1,helm:'crest',laurel:1,pad:1.2,cape:0x4a2a7a,wpn:'staff'}),
+ covenant_caster:(p,L,A,B,G,H)=>rigJelly(p,L,A,B,G,H,{oracle:1,y:1.6,n:4}),
+ warband_worker:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:.65,brute:1,helm:'brute',wpn:'tool',plate:false}),
+ warband_t1:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{brute:1,helm:'brute',wpn:'choppa',spikes:1,plate:false}),
+ warband_t2:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{brute:1,helm:'brute',wpn:'launcher',plate:false}),
+ warband_t3:(p,L,A,B,G,H)=>rigDread(p,L,A,B,G,H,{s:1.35,banner:0x5a3a1a,spikes:1}),
+ warband_medic:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{brute:1,helm:'brute',pack:1,wpn:'tool',plate:false,jetCol:0x9be05a}),
+ warband_hero:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.35,brute:1,helm:'brute',pad:1.5,padM:H,trim:1,cape:0x5a2a12,wpn:'heavy',spikes:1}),
+ warband_caster:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{brute:1,helm:'hood',wpn:'staff',orbs:1,plate:false}),
+ legion_worker:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{legs:6,y:.5,lf:.35,mand:true,gait:1.6}),
+ legion_t1:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{skel:1,helm:'skull',wpn:'rifle'}),
+ legion_t2:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.15,skel:1,helm:'skull',pad:.9,wpn:'heavy'}),
+ legion_scout:(p,L,A,B,G,H)=>rigSerp(p,L,A,B,G,H),
+ legion_medic:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{mech:1,legs:4,y:.85,lf:.5,lr:.04,gait:1.3}),
+ legion_hero:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.25,skel:1,helm:'skull',pad:1.3,padM:H,cape:0x0e3a22,wpn:'staff'}),
+ legion_caster:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{skel:1,helm:'skull',robe:B,wpn:'staff',orbs:1}),
+ cult_worker:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:.85,helm:'hood',robe:B,wpn:'tool',plate:false}),
+ cult_t1:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'hood',wpn:'rifle',w:.85,plate:false}),
+ cult_t2:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'horn',pad:1.1,spikes:1,wpn:'flamer'}),
+ cult_t3:(p,L,A,B,G,H)=>rigBug(p,L,A,B,G,H,{mech:1,legs:4,y:1.3,lf:.75,lr:.1,cannon:1,claws:1,spread:1.3,gait:1}),
+ cult_medic:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'hood',robe:A,wpn:'staff',plate:false}),
+ cult_flyer:(p,L,A,B,G,H)=>rigWing(p,L,A,B,G,H,{horns:1,r0:.5,memb:MEMB2()}),
+ cult_hero:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.25,helm:'horn',pad:1.4,trim:1,cape:0x3a0a10,wpn:'staff',orbs:1}),
+ cult_caster:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'horn',robe:B,wpn:'staff',orbs:1}),
+ cult_fiend:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{s:1.9,brute:1,helm:'horn',wpn:'claws',wM:G,wings:1,wingM:MEMB2(),spikes:1,plate:false})
+});
 Object.assign(RIGS,{
  templar_worker:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'hood',robe:B,wpn:'tool',servo:1,s:.95}),
  templar_t1:(p,L,A,B,G,H)=>rigHum(p,L,A,B,G,H,{helm:'dome',pad:1.25,trim:1,pack:1,wpn:'rifle'}),
@@ -1971,12 +2126,13 @@ function kill(e,byTeam){
   if(e.isB){sparks(e.x,1.5,e.z,0x555555,20,3,1.4,3);later(.25,()=>explosion(e.x+rand(-1,1),e.z+rand(-1,1),e.r*.8,0xffc060))}
   const root=e.p.root,P=e.p;P.bar.visible=false;P.ring.visible=false;if(P.aura)P.aura.visible=false;if(P.beam)P.beam.visible=false;if(P.heroRing)P.heroRing.visible=false;
   const y0=root.position.y;
+  if(P.rig&&P.rig.death){const RG=P.rig;fxs.push({t:0,life:1.3,upd:k=>RG.death(RG,k)})}
   if(e.isB){debris(e.x,e.z,1.5,e.r*.6,T.fac,8);fxs.push({t:0,life:1.4,upd:k=>{root.position.y=-k*3;root.rotation.z=Math.sin(k*40)*.03*(1-k)},done:()=>scene.remove(root)})}
   else if(e.d.air){const vx=Math.sin(e.face)*4,vz=Math.cos(e.face)*4,x0=e.x,z0=e.z,fac=T.fac;
     fxs.push({t:0,life:1,upd:k=>{root.position.set(x0+vx*k,Math.max(0,y0*(1-k*k)),z0+vz*k);P.body.rotation.y+=.22;P.body.rotation.z=k*1.2;if(Math.random()<.7)sparks(root.position.x,root.position.y,root.position.z,0x555555,1,1,.9,1.2)},
       done:()=>{scene.remove(root);explosion(x0+vx,z0+vz,1.5,0xffa040);debris(x0+vx,z0+vz,.3,e.r,fac,5)}})}
   else if(T.fac!=='swarm'&&T.fac!=='covenant'){debris(e.x,e.z,e.d.h*.5,e.r,T.fac,e.d.r>=1||e.d.hero?7:3);const dir=Math.random()<.5?1:-1;
-    fxs.push({t:0,life:1.6,upd:k=>{const f=Math.min(1,k*2.4);if(P.rig)(P.rig.kind==='dread'?rigDreadDeath:rigHumDeath)(P.rig,k);P.lunge.rotation.x=f*f*1.35*(P.rig?.75:1);P.lunge.rotation.z=f*.25*dir;P.lunge.position.y=0;root.position.y=k>.6?-(k-.6)*1.6:0;if(k<.5&&Math.random()<.4)sparks(root.position.x,.6,root.position.z,0xffd27a,1,2,.3,1)},done:()=>scene.remove(root)})}
+    fxs.push({t:0,life:1.6,upd:k=>{const f=Math.min(1,k*2.4);P.lunge.rotation.x=f*f*1.35*(P.rig?.75:1);P.lunge.rotation.z=f*.25*dir;P.lunge.position.y=0;root.position.y=k>.6?-(k-.6)*1.6:0;if(k<.5&&Math.random()<.4)sparks(root.position.x,.6,root.position.z,0xffd27a,1,2,.3,1)},done:()=>scene.remove(root)})}
   else if(T.fac==='covenant'){sparks(e.x,1,e.z,0xc6a8ff,12,2.5,.7,2);
     fxs.push({t:0,life:1,upd:k=>{P.body.scale.setScalar(Math.max(.01,1-k));root.position.y=y0+k*1.5;if(Math.random()<.5)sparks(root.position.x,root.position.y+.8,root.position.z,0xc6a8ff,1,1,.5,1)},done:()=>scene.remove(root)})}
   else{sparks(e.x,.5,e.z,0x9dff3b,10,3,.6,1.5);
@@ -3170,7 +3326,7 @@ function renderInfo(){
     if(!e.isB&&e.d.worker)sub+=' · '+(e.state==='gather'||e.state==='return'?'mining':e.state==='build'?'building':e.state);
     let q='';
     if(e.isB&&e.queue&&e.queue.length){q='<div class="q">'+e.queue.map((x,i)=>`<span>${x.type==='unit'?T.F.units[x.k].name:RESEARCH[x.k].name}${i===0?`<u style="width:${Math.floor(x.t/x.time*100)}%"></u>`:''}</span>`).join('')+'</div>'}
-    infoEl.innerHTML=`<div class="nm">${nm}</div><div class="sub">${e.shMax?Math.ceil(e.sh)+'/'+e.shMax+' shield · ':''}${Math.ceil(e.hp)}/${e.maxhp} hp · ${sub}</div><div class="hp"><b style="width:${clamp(e.hp/e.maxhp*100,0,100)}%"></b></div>${q}`;
+    infoEl.innerHTML=`<div class="nm">${nm}</div><div class="sub">${e.shMax?Math.ceil(e.sh)+'/'+Math.round(e.shMax)+' shield · ':''}${Math.ceil(e.hp)}/${Math.round(e.maxhp)} hp · ${sub}</div><div class="hp"><b style="width:${clamp(e.hp/e.maxhp*100,0,100)}%"></b></div>${q}`;
     return;
   }
   const c={};for(const e of selected)c[e.d.name]=(c[e.d.name]||0)+1;
