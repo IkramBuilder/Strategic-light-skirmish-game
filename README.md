@@ -1,5 +1,7 @@
 # Dafhio Dominion
 
+**▶ Play in your browser:** https://ikrambuilder.github.io/Strategic-light-skirmish-game/
+
 A light, mobile-ready real-time strategy skirmish game that runs in any modern browser (Android 10+, iOS, desktop).
 Single HTML file + Three.js (r128 from cdnjs). Original factions inspired by classic RTS archetypes.
 
