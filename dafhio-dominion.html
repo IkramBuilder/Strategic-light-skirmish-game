@@ -146,6 +146,7 @@ body.inmenu #bottom,body.inmenu #tools,body.inmenu #power,body.inmenu #quick,bod
 table.stand{grid-column:1/-1;width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}table.stand td,table.stand th{padding:4px;border-bottom:1px solid var(--edge);text-align:left}
 table.stand tr.me td{color:var(--amber)}.dot{display:inline-block;width:9px;height:9px;margin-right:5px}
 .pcq{color:#ffd84a}
+.seg button.dom{color:#ff5468;border-color:#6a1d26}.seg button.dom.sel{background:rgba(255,84,104,.18);border-color:#ff5468;color:#ff8a9a}
 #achBanner{position:fixed;top:calc(56px + env(safe-area-inset-top));left:0;right:0;margin:0 auto;width:max-content;max-width:92vw;z-index:35;display:none;align-items:center;gap:12px;padding:10px 18px;background:linear-gradient(135deg,rgba(70,52,10,.96),rgba(30,22,6,.96));border:1px solid #ffd84a;box-shadow:0 0 24px rgba(255,216,74,.35);pointer-events:none;min-width:240px}
 #achBanner.on{display:flex}#achBanner i{font-style:normal;font-size:30px}#achBanner small{display:block;font-size:10px;letter-spacing:.2em;color:#ffd84a}#achBanner b{display:block;font-size:17px}#achBanner span{font-size:12px;color:#d9c89a}
 #menu h1 .ch{display:inline-block}
@@ -207,18 +208,20 @@ table.stand tr.me td{color:var(--amber)}.dot{display:inline-block;width:9px;heig
     <div class="lbl">Enemy (1v1)</div>
     <div class="seg" id="enemySeg"><button data-e="random" class="sel">Random</button><button data-e="vanguard">Vanguard</button><button data-e="swarm">Swarm</button><button data-e="covenant">Covenant</button><button data-e="templar">Templars</button><button data-e="warband">Warband</button><button data-e="legion">Legion</button><button data-e="cult">Cult</button></div>
     <div class="lbl">Map</div>
-    <div class="seg" id="mapSeg"><button data-m="basin" class="sel">Basin</button><button data-m="gold">Gold Core</button><button data-m="isles">Isles</button><button data-m="jungle">Jungle</button></div>
+    <div class="seg" id="mapSeg"><button data-m="basin" class="sel">Basin</button><button data-m="gold">Gold Core</button><button data-m="isles">Isles</button><button data-m="jungle">Jungle</button><button data-m="random">🎲 Random</button></div>
     <p class="mdesc" id="mapDesc"></p>
     <div class="lbl">AI difficulty</div>
     <div class="seg" id="diffSeg">
-      <button data-d="easy">Easy</button><button data-d="normal" class="sel">Normal</button><button data-d="hard">Hard</button>
+      <button data-d="easy">Easy</button><button data-d="normal" class="sel">Normal</button><button data-d="hard">Hard</button><button data-d="dominion" class="dom">Dominion</button>
     </div>
+    <div class="lbl">Fog of war</div>
+    <div class="seg" id="fogSeg"><button data-f2="1" class="sel">On</button><button data-f2="0">Off</button></div>
     <div class="lbl">Map events</div>
     <div class="seg" id="evSeg"><button data-ev="1" class="sel">On</button><button data-ev="0">Off</button></div>
     <div class="lbl">Graphics</div>
     <div class="seg"><button data-q="0">Low</button><button data-q="1">Medium</button><button data-q="2">High</button><button data-q="3" class="pcq">Ultra (PC)</button></div>
     <button class="big bevel" id="startBtn">Deploy vs AI</button>
-    <div class="seg" style="margin-top:8px"><button id="lanBtn">LAN multiplayer</button><button id="achBtn">Achievements</button></div>
+    <div class="seg" style="margin-top:8px"><button id="lanBtn">Multiplayer</button><button id="achBtn">Achievements</button></div>
     <details>
       <summary>How to play</summary>
       <p><b>Goal:</b> destroy every enemy structure.</p>
@@ -242,11 +245,12 @@ table.stand tr.me td{color:var(--amber)}.dot{display:inline-block;width:9px;heig
 </div>
 
 <div class="ov" id="lan"><div class="sheet bevel">
-  <h2 style="margin:0 0 4px">LAN multiplayer</h2>
-  <p class="mdesc">Play with friends on the same Wi-Fi. <b>Direct</b> pairs two devices with a code or QR. <b>Server</b> needs one PC running <code>node server.js</code>; everyone opens the address it prints.</p>
+  <h2 style="margin:0 0 4px">Multiplayer</h2>
+  <p class="mdesc"><b>Online room</b>: everyone types the same room name, works anywhere with internet. <b>Direct</b>: same Wi-Fi, pair with a code or QR. <b>LAN server</b>: one PC runs <code>node server.js</code>.</p>
   <div class="lbl">Your name</div><input id="lanName" class="inp" maxlength="14" placeholder="Commander name">
   <div class="lbl">Connection</div>
-  <div class="seg" id="lanVia"><button data-v="rtc" class="sel">Direct (code / QR)</button><button data-v="ws">Server (server.js)</button></div>
+  <div class="seg" id="lanVia"><button data-v="room" class="sel">Online room</button><button data-v="rtc">Direct (code / QR)</button><button data-v="ws">LAN server</button></div>
+  <div id="roomRow"><div class="lbl">Room name (share it with your friends)</div><input id="lanRoom" class="inp" maxlength="24" placeholder="e.g. ikram-squad"></div>
   <div id="wsRow" style="display:none"><div class="lbl">Server address (blank = this page's server)</div><input id="lanAddr" class="inp" placeholder="192.168.1.20:8080"></div>
   <div class="seg" id="lanActs" style="margin-top:12px"><button id="lanHost">Host game</button><button id="lanJoin">Join game</button></div>
   <p id="lanStatus" class="mdesc"></p>
@@ -313,9 +317,10 @@ window.SFXDATA={"aegis":"SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAA
 /* =========================================================
    REVISION  (badge top-right; details behind DEV_PIN)
    ========================================================= */
-const REV='2.4.0';
+const REV='2.5.0';
 const DEV_PIN='2468';           // change this to your own PIN
 const CHANGELOG=[
+ {rev:'2.5.0',date:'2026-10-30',notes:['Online rooms (Trystero, no server): type the same room name to play over the internet','Fog of war: unexplored / explored / visible, ally-shared vision, hidden enemies on screen and minimap; toggle in menu and LAN','Dominion difficulty: focus fire, target priority, kiting, retreat-and-regroup, gather-then-strike with flanking, worker raids','Random map generator with shareable seed (re-roll by tapping Random again); connectivity checked','Dominator achievement']},
  {rev:'2.4.0',date:'2026-10-30',notes:['Recorded CC0 weapon/impact sounds (Kenney, Superpowers, Still North Media, Thimras, Electricity pack) with pitch variation; synth fallback','5 original procedural metal/rock tracks: Banners Rise (menu), Iron Basin (thrash), Golden Core (groove), Shattered Isles (doom), Verdant War (d-beat); layers grow with combat intensity','Gold crown + name above every hero','Movement realism: acceleration/deceleration, heavy units turn before driving, stride synced to real speed (no foot sliding), vehicle pitch on brake/accelerate, body roll in turns, air units bank into turns']},
  {rev:'2.3.0',date:'2026-10-30',notes:['Ultra skeletons for all 7 races: humanoids (troopers, brutes, skeletons, cultists, wardens), insects (tripod gait, bending legs, mandibles, tails), jellyfish/oracle tentacles, serpent spine, winged flyers (two-joint wing flaps), reverse-knee walker, Dreadnought-style walkers','Dual-blade, launcher, flamer and claw combat poses; wings on the Fiend; tails on the Hive Tyrant','Every rig has its own death animation','Fix: building HP no longer shows long decimals (e.g. 1839.9999999)']},
  {rev:'2.2.0',date:'2026-10-30',notes:['Ultra: Iron Templars get articulated skeletons (hips, spine, chest, neck, head, shoulders, elbows, hands, thighs, knees, feet, cape links)','Procedural clips: idle breathing and weight shift, walk with knee bend and arm swing, aim and recoil, overhead hammer swing, hit flinch, collapse on death','Dreadnought: jointed legs, aiming gun arm, opening claw; Bondsmith servo-arm hammering; hero cape secondary motion; caster staff raise; medic healing pose; jump-pack flames']},
@@ -566,7 +571,8 @@ const PLAYABLE=()=>Object.keys(FAC).filter(k=>k!=='neutral');
 const RESEARCH={w:{name:'Weapons',ic:'⚔',cost:[100,100],time:40,max:2},a:{name:'Plating',ic:'⛨',cost:[100,100],time:40,max:2}};
 const DIFF={easy:{think:2.4,inc:.55,wave:22,workers:9,grow:3,firstAtk:480,qmax:1,resAfter:600,powerAfter:540,turrets:1,cast:2},
  normal:{think:1.2,inc:.85,wave:15,workers:14,grow:4,firstAtk:300,qmax:2,resAfter:360,powerAfter:300,turrets:1,cast:1},
- hard:{think:.5,inc:1.3,wave:10,workers:20,grow:6,firstAtk:150,qmax:2,resAfter:0,powerAfter:0,turrets:2,cast:0}};
+ hard:{think:.5,inc:1.3,wave:10,workers:20,grow:6,firstAtk:150,qmax:2,resAfter:0,powerAfter:0,turrets:2,cast:0},
+ dominion:{think:.35,inc:1.5,wave:12,workers:22,grow:7,firstAtk:150,qmax:3,resAfter:0,powerAfter:0,turrets:3,cast:0,smart:1}};
 const FLYH=4.2;
 const hitsOf=d=>d.hits!=null?d.hits:(d.proj==='melee'?'g':'ga');
 const canHitH=(h,t)=>(t.isB||!t.d.air)?h.indexOf('g')>=0:h.indexOf('a')>=0;
@@ -590,6 +596,34 @@ const MAPS={
   points:mir([[-14,-14],[-30,4],[4,-30]]),exp:mir([[-50,22,0],[-32,-32,1]])}
 };
 for(const k in MAPS)MAPS[k].bases=BASES;
+let RSEED=1+Math.floor(Math.random()*99999);const GENC={};
+function genMap(seed,big){const key=seed+(big?'b':'s');if(GENC[key])return GENC[key];
+  const R=srand(seed*7919+13),TH=['basin','gold','isles','jungle'],tid=TH[Math.floor(R()*4)],th=MAPS[tid],M=big?96:66,bases=big?BIGB:BASES;
+  const pts=[],exp=[],obs=[];const far=(x,z,arr,d)=>arr.every(q=>d2(x,z,q[0],q[1])>d*d);const inB=(x,z,m)=>Math.abs(x)<M-m&&Math.abs(z)<M-m;
+  const bOK=(x,z,d)=>bases.every(b=>d2(x,z,b.x,b.z)>d*d&&d2(-x,-z,b.x,b.z)>d*d);
+  if(R()<.6)pts.push([0,0]);let pairs=0,tr=0;const np=big?4:3;
+  while(pairs<np&&tr++<400){const x=(R()*2-1)*(M-12),z=(R()*2-1)*(M-12);if(!bOK(x,z,24)||!far(x,z,pts,17)||!far(-x,-z,pts,17)||x*x+z*z<14*14)continue;pts.push([x,z],[-x,-z]);pairs++}
+  const half=big?[0,2,4]:[0];
+  for(const i of half){const b=bases[i];let ok=false;for(let k=0;k<30&&!ok;k++){const a=Math.atan2(-b.x,-b.z)+(R()*2-1)*.9,d=24+R()*8,x=b.x+Math.sin(a)*d,z=b.z+Math.cos(a)*d;
+    if(inB(x,z,12)&&far(x,z,pts,13)&&bOK(x,z,17)&&far(x,z,exp,16)){exp.push([Math.round(x),Math.round(z),0],[-Math.round(x),-Math.round(z),0]);ok=true}}}
+  let gp=0;tr=0;while(gp<(big?2:1)&&tr++<200){const x=(R()*2-1)*(M-14),z=(R()*2-1)*(M-14);if(!inB(x,z,12)||!bOK(x,z,30)||!far(x,z,pts,13)||!far(x,z,exp,18)||x*x+z*z<20*20)continue;exp.push([Math.round(x),Math.round(z),1],[-Math.round(x),-Math.round(z),1]);gp++}
+  if(R()<.35){exp.push([0,0,2]);for(let i=pts.length-1;i>=0;i--)if(pts[i][0]===0&&pts[i][1]===0)pts.splice(i,1)}
+  const pL=tid==='isles'?.55:.18,pJ=tid==='jungle'?.6:.18,nf=big?9:6;
+  const okC=(x,z,r)=>inB(x,z,r+3)&&bOK(x,z,22+r)&&far(x,z,pts,9+r)&&far(x,z,exp.filter(e=>e[2]!==2),13+r)&&(exp.some(e=>e[2]===2)?x*x+z*z>(12+r)**2:true);
+  for(let f=0,t2=0;f<nf&&t2<300;t2++){const x=(R()*2-1)*(M-8),z=(R()*2-1)*(M-8),q=R();const add=[];
+    if(q<pL){const r=6+R()*4;if(okC(x,z,r))add.push([x,z,r,'lake'])}
+    else if(q<pL+pJ){const a=R()*6.283,n=3+Math.floor(R()*4);for(let i=0;i<n;i++){const cx=x+Math.sin(a)*i*5,cz=z+Math.cos(a)*i*5;if(okC(cx,cz,4.2))add.push([cx,cz,4.2,'jungle'])}}
+    else{const n=1+Math.floor(R()*3);for(let i=0;i<n;i++){const cx=x+(R()-.5)*7,cz=z+(R()-.5)*7,r=2+R()*1.6;if(okC(cx,cz,r))add.push([cx,cz,r])}}
+    if(!add.length)continue;const trial=obs.concat(add.flatMap(o=>[o,[-o[0],-o[1],...o.slice(2)]]));if(genConnected(trial,bases,M)){obs.length=0;obs.push(...trial);f++}}
+  const m={name:'Random '+seed,desc:'Procedurally generated '+th.name+'-style map (seed '+seed+'). Tap Random again to re-roll.',tint:th.tint,tree:th.tree,seed:seed%9973+7,lane:false,obs,points:pts.map(p=>[Math.round(p[0]),Math.round(p[1])]),exp,bases,track:tid,rnd:1};
+  GENC[key]=m;return m}
+function genConnected(obs,bases,M){const C=3,N=Math.ceil(M*2/C)+1,blk=new Uint8Array(N*N),idx=(x,z)=>clamp(Math.floor((x+M)/C),0,N-1)*N+clamp(Math.floor((z+M)/C),0,N-1);
+  for(const o of obs){const r=o[2]+1.6;for(let i=Math.floor((o[0]-r+M)/C);i<=Math.floor((o[0]+r+M)/C);i++)for(let j=Math.floor((o[1]-r+M)/C);j<=Math.floor((o[1]+r+M)/C);j++){if(i<0||j<0||i>=N||j>=N)continue;const cx=i*C-M+C/2,cz=j*C-M+C/2;if(d2(cx,cz,o[0],o[1])<r*r)blk[i*N+j]=1}}
+  const s=idx(bases[0].x,bases[0].z),seen=new Uint8Array(N*N),q=[s];seen[s]=1;
+  while(q.length){const c=q.pop(),ci=Math.floor(c/N),cj=c%N;for(const [di,dj] of[[1,0],[-1,0],[0,1],[0,-1]]){const ni=ci+di,nj=cj+dj;if(ni<0||nj<0||ni>=N||nj>=N)continue;const k=ni*N+nj;if(seen[k]||blk[k])continue;seen[k]=1;q.push(k)}}
+  return bases.every(b=>seen[idx(b.x,b.z)])}
+function getMap(id,big,seed){return id==='random'?genMap(seed||RSEED,big):big?bigMap(id):MAPS[id]}
+
 const bigCache={};
 function bigMap(id){
   if(bigCache[id])return bigCache[id];
@@ -821,7 +855,7 @@ function updMotes(dt){if(!motes.visible)return;const R=30;for(let i=0;i<MN;i++){
   y+=mSp[i]*dt*.5;x+=Math.sin(gtime*.7+i)*dt*.3;mPos[i*3]=x;mPos[i*3+1]=y;mPos[i*3+2]=z}mGeo.attributes.position.needsUpdate=true}
 function updGlow(){
   GL_S.c=0;GL_L.c=0;
-  for(const e of ents){if(e.dead)continue;const T=teams[e.team],gc=FAC[T.fac].col.g;
+  for(const e of ents){if(e.dead||e.fogHid)continue;const T=teams[e.team],gc=FAC[T.fac].col.g;
     if(e.isB){if(!LOWQ||e.key==='hq')gpush(GL_L,e.x,e.d.h*.72,e.z,NP>2?T.color:gc,e.built?.3:.1);continue}
     const fy=e.p.root.position.y,sn=Math.sin(e.face),cs=Math.cos(e.face);
     gpush(GL_S,e.x+sn*e.r*.5,fy+e.d.h*.72,e.z+cs*e.r*.5,gc,.5+e.recoil*.9);
@@ -2101,7 +2135,7 @@ function drums(T,st,bar,t,I,sd){const d=T.drum,dbl=I>.55,fill=bar%4===3&&st>=12;
   else{if(st===0||st===10||(dbl&&st===7))kick(t,1);if(st===8)snare(t,1);if(I>.3&&st%4===2)hat(t,.8);if(st===0&&bar%2===0)crash(t,.5)}}
 function musicTick(){
   const c=SND.ctx;if(!c||c.state!=='running')return;
-  const want=state==='menu'?'menu':(TRACKS[mapId]?mapId:'basin');if(MUS.track!==want){MUS.track=want;MUS.step=0;MUS.next=c.currentTime+.1}
+  const want=state==='menu'?'menu':(CUR&&CUR.track)||(TRACKS[mapId]?mapId:'basin');if(MUS.track!==want){MUS.track=want;MUS.step=0;MUS.next=c.currentTime+.1}
   MUS.int+=((state==='menu'?.62:MUS.target)-MUS.int)*.03;
   const T=TRACKS[MUS.track],sd=60/T.bpm/4;
   if(MUS.next<c.currentTime)MUS.next=c.currentTime+.05;
@@ -2194,6 +2228,25 @@ function kill(e,byTeam){
   if(e.isB&&LOG)checkEnd();
 }
 function refund(team,c){teams[team].c+=c[0];teams[team].e+=c[1]}
+
+/* --- fog of war --- */
+let fogOn=true;const FOG={on:false,N:0,vis:null,exp:null,tex:null,mesh:null,data:null,t:0,mc:null};
+function sightOf(e){if(e.isB)return e.key==='hq'?15:e.key==='turret'?11.5:e.d.crate?0:9;const d=e.d;return d.boss?10:d.cap?15:d.air?13:d.hero?13:d.worker?8.5:d.range>=9?12:11}
+function fogInit(){if(FOG.mesh){scene.remove(FOG.mesh);FOG.tex.dispose()}FOG.on=fogOn;const N=Math.ceil(MAP*2/2)+1;FOG.N=N;FOG.vis=new Uint8Array(N*N);FOG.exp=new Uint8Array(N*N);FOG.data=new Uint8Array(N*N*4);
+  for(let i=0;i<N*N;i++){FOG.data[i*4]=3;FOG.data[i*4+1]=7;FOG.data[i*4+2]=12;FOG.data[i*4+3]=235}
+  FOG.tex=new THREE.DataTexture(FOG.data,N,N,THREE.RGBAFormat);FOG.tex.magFilter=THREE.LinearFilter;FOG.tex.minFilter=THREE.LinearFilter;FOG.tex.needsUpdate=true;
+  const g=new THREE.PlaneGeometry(N*2,N*2);g.rotateX(-Math.PI/2);FOG.mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:FOG.tex,transparent:true,depthWrite:false}));
+  FOG.mesh.position.set(-MAP+N,2.4,-MAP+N);FOG.mesh.renderOrder=3;scene.add(FOG.mesh);FOG.mesh.visible=FOG.on;FOG.t=0;
+  if(!FOG.mc){FOG.mc=document.createElement('canvas')}FOG.mc.width=N;FOG.mc.height=N;FOG.mctx=FOG.mc.getContext('2d');FOG.img=FOG.mctx.createImageData(N,N);
+  for(const e of ents)if(e.p&&e.p.root)e.p.root.visible=true}
+function fogCell(x,z){const N=FOG.N;return clamp(Math.floor((x+MAP)/2),0,N-1)*N+clamp(Math.floor((z+MAP)/2),0,N-1)}
+function fogUpdate(dt){if(!FOG.on||!FOG.vis)return;FOG.t-=dt;if(FOG.t>0)return;FOG.t=.15;const N=FOG.N,V=FOG.vis,my=teams[0];if(!my)return;V.fill(0);
+  for(const e of ents){if(e.dead||!teams[e.team]||teams[e.team].side!==my.side)continue;const r=sightOf(e)/2;if(r<=0)continue;const ci=Math.floor((e.x+MAP)/2),cj=Math.floor((e.z+MAP)/2),rr=Math.ceil(r);
+    for(let i=Math.max(0,ci-rr);i<=Math.min(N-1,ci+rr);i++)for(let j=Math.max(0,cj-rr);j<=Math.min(N-1,cj+rr);j++){const di=i-ci,dj=j-cj;if(di*di+dj*dj<=r*r)V[i*N+j]=1}}
+  const D=FOG.data,I=FOG.img.data;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){const k=i*N+j;if(V[k])FOG.exp[k]=1;const tg=V[k]?0:FOG.exp[k]?135:235;const t=((N-1-j)*N+i)*4;D[t+3]=D[t+3]+(tg-D[t+3])*.55;const mi=(j*N+i)*4;I[mi]=4;I[mi+1]=8;I[mi+2]=14;I[mi+3]=V[k]?0:FOG.exp[k]?110:225}
+  FOG.tex.needsUpdate=true;FOG.mctx.putImageData(FOG.img,0,0);
+  for(const e of ents){if(e.dead||!e.p)continue;const own=teams[e.team]&&teams[e.team].side===my.side;let vis=own||V[fogCell(e.x,e.z)]===1;if(!vis&&e.isB&&FOG.exp[fogCell(e.x,e.z)])vis=true;e.fogHid=!vis;e.p.root.visible=vis}}
 
 /* --- spatial grid --- */
 const CELL=6;let GW=0,grid=[];function initGrid(){GW=Math.ceil(MAP*2/CELL)+2;grid=[];for(let i=0;i<GW*GW;i++)grid.push([])}initGrid();
@@ -2383,6 +2436,13 @@ function workerLogic(e,dt){
     return;
   }
 }
+
+/* --- Dominion AI micro --- */
+function smartTarget(e){let best=null,bs=1e9;const rr=e.d.range+e.r+2.5;
+  query(e.x,e.z,rr+4,o=>{if(o.dead||!hostile(o.team,e.team)||!canHit(e,o)||(o.d&&o.d.crate)||teams[o.team].neutral&&!o.d.boss)return;const dd=dist(e,o)-o.r;if(dd>rr)return;
+    const hpR=(o.hp+(o.sh||0))/Math.max(1,o.maxhp+(o.shMax||0));let sc=hpR*10+dd*.25;
+    if(o.d.spell||o.d.heal)sc-=4;if(o.d.hero)sc-=2.5;if(o.d.worker)sc-=1;if(o.isB)sc+=7;if(o.d.air&&e.d.vs==='air')sc-=3;if(e.d.vs==='armored'&&o.d.armor==='armored')sc-=2;if(e.d.vs==='light'&&o.d.armor==='light'&&!o.isB)sc-=1.5;
+    if(sc<bs){bs=sc;best=o}});return best}
 function unitLogic(e,dt){
   const T=teams[e.team];
   e.cd-=dt*(T.frenzy>0&&!e.d.worker?1.6:1);
@@ -2407,6 +2467,8 @@ function unitLogic(e,dt){
   }
   if(e.target){
     const t=e.target,dd=dist(e,t)-t.r-e.r;
+    if(T.smart&&!e.d.worker&&e.d.dmg>0){e.smT=(e.smT||0)-dt;if(e.smT<=0){e.smT=.45;const b=smartTarget(e);if(b&&b!==t){e.target=b;return}}
+      if(e.d.range>=4&&t.d&&t.d.proj==='melee'&&!t.isB&&dd<e.d.range*.45&&e.cd>.12&&!e.d.air){const ax=e.x-t.x,az=e.z-t.z,l=Math.hypot(ax,az)||1;moveToward(e,e.x+ax/l*4,e.z+az/l*4);return}}
     if(dd<=e.d.range){
       e.face=Math.atan2(t.x-e.x,t.z-e.z);
       if(e.cd<=0){attack(e,t);e.cd=e.d.cd}
@@ -2656,7 +2718,7 @@ function aiBuild(team,key,my){
   return false;
 }
 function aiThink(team){
-  const T=teams[team],D=DIFF[diff],A=T.ai;if(!T.alive)return;
+  const T=teams[team],D=DIFF[diff],A=T.ai;if(!T.alive)return;T.smart=!!D.smart;
   const host=e=>!e.dead&&hostile(e.team,team)&&teams[e.team].alive&&!teams[e.team].neutral;
   const my=ents.filter(e=>e.team===team&&!e.dead);
   const blds=my.filter(e=>e.isB),units=my.filter(e=>!e.isB);
@@ -2697,9 +2759,15 @@ function aiThink(team){
   let threat=null;
   for(const e of ents){if(e.isB||!host(e))continue;for(const b of blds){if(d2(e.x,e.z,b.x,b.z)<22*22){threat=e;break}}if(threat)break}
   const armySup=army.reduce((s,u)=>s+u.d.sup,0);
-  if(threat){for(const u of army)if(u.state!=='cast'&&(!u.target||u.state!=='amove')){u.state='amove';u.tx=threat.x;u.tz=threat.z}}
+  if(D.smart){const home={x:T.base.x*.82,z:T.base.z*.82};
+    for(const u of army){if(u.d.hero||u.d.air)continue;if(!u.retreat&&u.hp<u.maxhp*.3&&u.target){u.retreat=gtime;u.target=null;u.state='move';u.tx=home.x+rand(-3,3);u.tz=home.z+rand(-3,3)}
+      else if(u.retreat&&(u.hp>u.maxhp*.75||gtime-u.retreat>25)){u.retreat=0;u.state='idle'}}
+    if(gtime-(A.raidT||0)>55&&gtime>200){A.raidT=gtime;const raiders=army.filter(u=>!u.retreat&&(u.d.cap>1||u.d.air)&&!u.d.heal).slice(0,4);let wk=null,wd=1e9;for(const e of ents){if(e.dead||e.isB||!e.d.worker||!host(e))continue;const dd=d2(e.x,e.z,T.base.x,T.base.z);if(dd<wd){wd=dd;wk=e}}
+      if(wk&&raiders.length){for(const u of raiders){u.state='attack';u.target=wk}if(NP===2&&hostile(0,team))toast('Enemy raiders spotted near your workers','bad')}}}
+  const armyF=army.filter(u=>!u.retreat);
+  if(threat){for(const u of armyF)if(u.state!=='cast'&&(!u.target||u.state!=='amove')){u.state='amove';u.tx=threat.x;u.tz=threat.z}}
   else{
-    if(!A.attacking&&gtime>D.firstAtk&&armySup>=A.waveSize){A.attacking=true;A.wave++;A.waveSize=Math.min(Math.round(SUPMAX*.56),A.waveSize+D.grow)}
+    if(!A.attacking&&gtime>D.firstAtk&&armySup>=A.waveSize){A.attacking=true;A.wave++;A.waveSize=Math.min(Math.round(SUPMAX*.56),A.waveSize+D.grow);if(D.smart){A.gather=gtime+10;if(NP===2&&hostile(0,team))toast('The Dominion masses its army...','bad')}}
     if(A.attacking){
       if(armySup<4)A.attacking=false;
       else{
@@ -2707,10 +2775,12 @@ function aiThink(team){
         if(!A.foe||!teams[A.foe].alive){let fb=1e9;for(const e of ents){if(!e.isB||!host(e))continue;const dd=d2(T.base.x,T.base.z,e.x,e.z);if(dd<fb){fb=dd;A.foe=e.team}}}
         for(const e of ents){if(!e.isB||!host(e)||(NP>2&&e.team!==A.foe))continue;const dd=d2(cx,cz,e.x,e.z);if(dd<bd){bd=dd;tgt=e}}
         if(!tgt)A.foe=null;
-        if(tgt)for(const u of army)if(!u.target&&u.state!=='cast'&&(u.state==='idle'||Math.abs(u.tx-tgt.x)+Math.abs(u.tz-tgt.z)>4)){u.state='amove';u.tx=tgt.x+rand(-2,2);u.tz=tgt.z+rand(-2,2)}
+        if(tgt&&D.smart&&gtime<(A.gather||0)){const gx=(T.base.x*.45+tgt.x*.55)*.7,gz=(T.base.z*.45+tgt.z*.55)*.7;for(const u of armyF)if(!u.target&&u.state!=='cast'&&(u.state==='idle'||Math.abs(u.tx-gx)+Math.abs(u.tz-gz)>8)){u.state='amove';u.tx=gx+rand(-5,5);u.tz=gz+rand(-5,5)}}
+        else if(tgt&&D.smart){const dx=tgt.x-T.base.x,dz=tgt.z-T.base.z,l=Math.hypot(dx,dz)||1,px=-dz/l,pz=dx/l;for(const u of armyF)if(!u.target&&u.state!=='cast'&&(u.state==='idle'||Math.abs(u.tx-tgt.x)+Math.abs(u.tz-tgt.z)>14)){const side=(u.id%3)-1;u.state='amove';u.tx=tgt.x+px*side*9+rand(-2,2);u.tz=tgt.z+pz*side*9+rand(-2,2)}}
+        else if(tgt)for(const u of army)if(!u.target&&u.state!=='cast'&&(u.state==='idle'||Math.abs(u.tx-tgt.x)+Math.abs(u.tz-tgt.z)>4)){u.state='amove';u.tx=tgt.x+rand(-2,2);u.tz=tgt.z+rand(-2,2)}
       }
     }else{
-      const idle=army.filter(u=>u.state==='idle'&&!u.target);
+      const idle=army.filter(u=>u.state==='idle'&&!u.target&&!u.retreat);
       const todo=points.filter(p=>p.owner!==team&&(p.owner<0||hostile(p.owner,team))).sort((a,b)=>d2(a.x,a.z,T.base.x,T.base.z)-d2(b.x,b.z,T.base.x,T.base.z));
       let si=0;for(const sc of idle.filter(u=>u.d.cap>1)){const p=todo[si++];if(p){sc.state='amove';sc.tx=p.x;sc.tz=p.z;idle.splice(idle.indexOf(sc),1)}}
       for(const p of todo.slice(0,4)){if(idle.length<2)break;const sq=idle.splice(0,2);for(const u of sq){u.state='amove';u.tx=p.x+rand(-2,2);u.tz=p.z+rand(-2,2)}}
@@ -2757,7 +2827,8 @@ function initGame(setup){
   if(setup&&setup.mode){gameMode=setup.mode;mapId=setup.map;diff=setup.diff;eventsOn=setup.ev!==false}else setup=null;
   clearWorld();qT=0;qN=0;gtime=0;uid=0;mode='normal';boxMode=false;forceMove=false;endTimer=-1;lastAlert=-99;
   const big=gameMode!=='1v1';if(MAP!==(big?96:66))resizeWorld(big?96:66);
-  SUPMAX=big?80:100;CUR=big?bigMap(mapId):MAPS[mapId];
+  if(setup&&setup.seed)RSEED=setup.seed;if(setup&&setup.fog!=null)fogOn=setup.fog;
+  SUPMAX=big?80:100;CUR=getMap(mapId,big,RSEED);
   const others=PLAYABLE().filter(f=>f!==playerFac),allF=PLAYABLE();
   aiFac=(enemyPick==='random'||enemyPick===playerFac)?others[Math.floor(Math.random()*others.length)]:enemyPick;
   if(setup)teams=setup.players.map((pl,i)=>{const T=newTeam(i,pl.fac,pl.side);T.name=pl.name;if(pl.pid&&pl.pid!=='host')T.human=pl.pid;return T});
@@ -2774,6 +2845,7 @@ function initGame(setup){
     const b=CUR.bases[t];placeBuilding(t,'hq',b.x,b.z,true);
     for(let i=0;i<6;i++){const a=i*1.05;const u=spawnUnit(t,'worker',b.x+Math.sin(a)*5,b.z+Math.cos(a)*5);u.state='gather';teams[t].sup+=1}
   }
+  fogInit();
   cam.x=CUR.bases[0].x*.92;cam.z=CUR.bases[0].z*.92;cam.h=isTouch?36:42;qDone=false;lagT=0;lagN=0;
   setPowerUi();buildQuick();groups=[[],[],[]];cardDirty=true;state='play';
   $('menu').classList.remove('show');$('end').classList.remove('show');$('pause').classList.remove('show');$('lan').classList.remove('show');
@@ -2828,13 +2900,13 @@ function evBloom(){const sp=evSpot(0,.3)||{x:0,z:0};EVT.blooms++;EXTRA_EXP.push(
 const ACH=[['first','First Blood','Destroy your first enemy unit'],['win','Commander','Win a match'],['hard','Iron Will','Win on Hard'],['blitz','Blitzkrieg','Win in under 10 minutes'],
  ['flawless','Untouchable','Win without losing a building'],['eco','Economist','Mine 5,000 crystal in one match'],['relay','Relay Lord','Hold 5 relays at once'],['crate','Scavenger','Claim 3 supply drops in one match'],
  ['boss','Giant Slayer','Kill an Ancient Colossus'],['hero','Legend','Your hero scores 10 kills'],['power','Overwhelming Force','Use your commander power 5 times in a match'],
- ['ffa','Last One Standing','Win a Free-for-All'],['lan','Brothers in Arms','Win a LAN match'],['races','Polyglot','Win with 4 different races'],['killer','Exterminator','Destroy 300 enemy units in total']];
+ ['ffa','Last One Standing','Win a Free-for-All'],['lan','Brothers in Arms','Win a LAN match'],['races','Polyglot','Win with 4 different races'],['dominator','Dominator','Win against Dominion AI'],['killer','Exterminator','Destroy 300 enemy units in total']];
 let ACHS={got:{},kills:0,wins:[]};try{const v=localStorage.getItem('svAch');if(v)ACHS=Object.assign(ACHS,JSON.parse(v))}catch(e){}
 function achSave(){try{localStorage.setItem('svAch',JSON.stringify(ACHS))}catch(e){}}
 function unlock(id){if(ACHS.got[id])return;ACHS.got[id]=Date.now();achSave();const a=ACH.find(x=>x[0]===id);if(a){achQ.push(a);if(!achBusy)achNext();sfx('win')}}
 function achLive(){if(!teams[0]||state==='menu')return;const S=teams[0].stats;if(S.kills>=1)unlock('first');if(points.filter(p=>p.owner===0).length>=5)unlock('relay');if((S.crates||0)>=3)unlock('crate');if((S.boss||0)>=1)unlock('boss');if((S.heroK||0)>=10)unlock('hero');if((S.powers||0)>=5)unlock('power');if((S.mined||0)>=5000)unlock('eco')}
 function achEnd(){const S=teams[0].stats;ACHS.kills+=S.kills;if(ACHS.kills>=300)unlock('killer');achLive();
-  if(winner){unlock('win');if(diff==='hard')unlock('hard');if(gtime<600)unlock('blitz');if(!(S.blost>0))unlock('flawless');if(gameMode==='ffa')unlock('ffa');if(NET.role)unlock('lan');if(!ACHS.wins.includes(teams[0].fac))ACHS.wins.push(teams[0].fac);if(ACHS.wins.length>=4)unlock('races')}achSave()}
+  if(winner){unlock('win');if(diff==='hard'||diff==='dominion')unlock('hard');if(diff==='dominion')unlock('dominator');if(gtime<600)unlock('blitz');if(!(S.blost>0))unlock('flawless');if(gameMode==='ffa')unlock('ffa');if(NET.role)unlock('lan');if(!ACHS.wins.includes(teams[0].fac))ACHS.wins.push(teams[0].fac);if(ACHS.wins.length>=4)unlock('races')}achSave()}
 function renderAch(){const n=Object.keys(ACHS.got).length;$('achBody').innerHTML=`<p class="mdesc">${n} / ${ACH.length} unlocked · ${ACHS.kills} total kills · wins with: ${ACHS.wins.map(f=>FAC[f].name).join(', ')||'-'}</p>`+ACH.map(a=>`<div class="ach ${ACHS.got[a[0]]?'got':''}"><b>${ACHS.got[a[0]]?'🏆':'🔒'} ${a[1]}</b><span>${a[2]}</span></div>`).join('')}
 function checkEnd(){
   if(state!=='play'||endTimer>=0||NET.client)return;
@@ -3040,7 +3112,7 @@ function pickEnt(sx,sy){
   const ppu=innerHeight/(2*Math.tan(camera.fov/2*Math.PI/180)*camDist());
   let best=null,bs=1e9;
   for(const e of ents){
-    if(e.dead)continue;
+    if(e.dead||e.fogHid)continue;
     const s=toScreen(e.x,e.isB?1:e.d.h*.5+(e.d.air?FLYH:0),e.z);if(!s.in)continue;
     const dd=Math.hypot(s.x-sx,s.y-sy),th=Math.max(isTouch?34:14,e.r*ppu*1.2);
     const sc=dd+(e.isB?12:0);
@@ -3430,10 +3502,11 @@ function drawMini(dt){
   for(const n of nodes)if(n.amount>0){mctx.fillStyle=n.gold?'#ffcc4d':'#59c8ff';mctx.fillRect(m(n.x)-1,m(n.z)-1,2.5,2.5)}
   for(const p of points){mctx.strokeStyle=p.owner<0?'#8899aa':p.owner===0?'#63e88f':'#ff5468';mctx.lineWidth=2;mctx.beginPath();mctx.arc(m(p.x),m(p.z),4*s*1.3+2,0,7);mctx.stroke()}
   for(const e of ents){
-    if(e.dead)continue;mctx.fillStyle=NP>2?teams[e.team].css:(e.team===0?'#63e88f':'#ff5468');
+    if(e.dead||e.fogHid)continue;mctx.fillStyle=NP>2?teams[e.team].css:(e.team===0?'#63e88f':'#ff5468');
     if(e.isB){const z=Math.max(4,e.r*s*2);mctx.fillRect(m(e.x)-z/2,m(e.z)-z/2,z,z)}
     else{const z=e.d.worker?2:3;mctx.fillRect(m(e.x)-z/2,m(e.z)-z/2,z,z)}
   }
+  if(FOG.on&&FOG.mc&&state!=='menu'){mctx.imageSmoothingEnabled=true;mctx.drawImage(FOG.mc,0,0,W,H)}
   for(let i=pings.length-1;i>=0;i--){const p=pings[i];p.t-=.15;if(p.t<=0){pings.splice(i,1);continue}mctx.strokeStyle='rgba(255,84,104,'+p.t/2+')';mctx.lineWidth=2;mctx.beginPath();mctx.arc(m(p.x),m(p.z),(2.2-p.t)*10,0,7);mctx.stroke()}
   const ph=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ph'))||130;
   const cs=[groundAt(0,0),groundAt(innerWidth,0),groundAt(innerWidth,innerHeight-ph),groundAt(0,innerHeight-ph)];
@@ -3469,10 +3542,11 @@ $('musVol').addEventListener('input',e=>{SND.musV=e.target.value/100;if(SND.mus)
 $('sfxVol').addEventListener('input',e=>{SND.sfxV=e.target.value/100;if(SND.sfx)SND.sfx.gain.value=SND.sfxV});
 document.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{setQuality(+b.dataset.q);qDone=true}));
 document.querySelectorAll('#enemySeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#enemySeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');enemyPick=b.dataset.e;menuBackdrop()}));
+document.querySelectorAll('#fogSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#fogSeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');fogOn=b.dataset.f2==='1'}));
 document.querySelectorAll('#evSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#evSeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');eventsOn=b.dataset.ev==='1'}));
 document.querySelectorAll('#modeSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');gameMode=b.dataset.mode;menuBackdrop()}));
-const setMapDesc=()=>{$('mapDesc').textContent=MAPS[mapId].desc};setMapDesc();
-document.querySelectorAll('#mapSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#mapSeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');mapId=b.dataset.m;setMapDesc();menuBackdrop()}));
+const setMapDesc=()=>{$('mapDesc').textContent=mapId==='random'?'Procedural map, seed '+RSEED+'. Tap Random again to re-roll a new layout.':MAPS[mapId].desc};setMapDesc();
+document.querySelectorAll('#mapSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#mapSeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');if(b.dataset.m==='random'&&mapId==='random')RSEED=1+Math.floor(Math.random()*99999);mapId=b.dataset.m;setMapDesc();menuBackdrop()}));
 $('pauseBtn').addEventListener('click',togglePause);$('resumeBtn').addEventListener('click',togglePause);
 $('restartBtn').addEventListener('click',()=>{if(NET.role){toast('Cannot restart a LAN match','bad');return}if(SND.mus)SND.mus.gain.value=SND.musV;initGame()});$('againBtn').addEventListener('click',()=>{if(NET.role){netReset();toMenu()}else initGame()});
 const toMenu=()=>{if(NET.role)netReset();state='menu';for(const id of['pause','end','lan'])$(id).classList.remove('show');$('menu').classList.add('show');menuBackdrop();introTitle()};
@@ -3541,7 +3615,7 @@ function menuShowcaseUpd(dt){for(const u of showcase){u.sc+=dt*.11;const r=9,nx=
 function menuCamera(dt){menuT+=dt;menuAng+=dt*.07;const R=MAP*2.55,H=MAP*1.25,bob=Math.sin(menuT*.6)*3;
   camera.position.set(Math.sin(menuAng)*R,H+bob,Math.cos(menuAng)*R);camera.lookAt(0,-14+bob*.3,0);scene.fog.near=R*.95;scene.fog.far=R*3.4;
   const w=innerWidth,h=innerHeight;if(w>=900)camera.setViewOffset(w,h,-Math.min(320,w*.22),0,w,h);else camera.setViewOffset(w,h,0,h*.3,w,h)}
-function menuBackdrop(){if(state!=='menu')return;clearWorld();const big=gameMode!=='1v1';if(MAP!==(big?96:66))resizeWorld(big?96:66);CUR=big?bigMap(mapId):MAPS[mapId];
+function menuBackdrop(){if(state!=='menu')return;FOG.on=false;clearWorld();const big=gameMode!=='1v1';if(MAP!==(big?96:66))resizeWorld(big?96:66);CUR=getMap(mapId,big,RSEED);
   const opp=PLAYABLE().filter(f=>f!==playerFac);teams=[newTeam(0,playerFac,0),newTeam(1,(enemyPick!=='random'&&enemyPick!==playerFac)?enemyPick:opp[Math.floor(Math.random()*opp.length)],1)];NP=2;
   buildMapWorld();nodes=buildAllNodes();for(const p of points){p.owner=-1;p.prog=0;p.capT=-1}paintGround();
   placeBuilding(0,'hq',CUR.bases[0].x,CUR.bases[0].z,true);placeBuilding(1,'hq',CUR.bases[1].x,CUR.bases[1].z,true);
@@ -3550,7 +3624,7 @@ function menuBackdrop(){if(state!=='menu')return;clearWorld();const big=gameMode
 /* =========================================================
    LAN MULTIPLAYER (host-authoritative, WebRTC or WebSocket relay)
    ========================================================= */
-const NET={role:null,via:'rtc',client:false,peers:new Map(),hostSend:null,pid:null,my:0,N:2,sendT:0,nodeTick:0,events:[],lobby:null,ws:null,pc:null,pending:null,inGame:false,name:'',spec:false,myFac:'vanguard',mySide:'A'};
+const NET={role:null,via:'room',room:null,hostPid:null,client:false,peers:new Map(),hostSend:null,pid:null,my:0,N:2,sendT:0,nodeTick:0,events:[],lobby:null,ws:null,pc:null,pending:null,inGame:false,name:'',spec:false,myFac:'vanguard',mySide:'A'};
 const NETENT=new Map();
 const UK=['worker','t1','t2','t3','scout','medic','aa','flyer','hero','caster','brood','fiend','boss'],BK=['hq','depot','barracks','factory','turret','airfield','academy','crate'];
 const mapT=h=>h>=NET.N?h:(h-NET.my+NET.N)%NET.N,unmapT=l=>l>=NET.N?l:(l+NET.my)%NET.N;
@@ -3586,6 +3660,21 @@ function wsJoin(){const ws=wsOpen(m=>{
     if(m.t==='joined'){NET.hostSend=x=>{if(ws.readyState===1)ws.send(JSON.stringify({t:'m',m:x}))};clientOnOpen()}
     else if(m.t==='m')clientOnMsg(m.m);else if(m.t==='hostleft')clientOnHostLost();else if(m.t==='err'){toast(m.msg,'bad');lanStatus(m.msg)}},{t:'join',name:NET.name});
   if(ws)ws.onclose=()=>{if(NET.role==='client')clientOnHostLost()}}
+
+/* ---- online rooms via Trystero (serverless WebRTC matchmaking over public Nostr relays) ---- */
+let trysteroMod=null;
+async function loadTrystero(){if(window.__fakeTrystero)return window.__fakeTrystero;if(trysteroMod)return trysteroMod;
+  for(const u of['https://esm.sh/trystero@0.26.0/nostr','https://esm.run/trystero@0.26.0']){try{trysteroMod=await import(u);if(trysteroMod.joinRoom)return trysteroMod}catch(e){}}throw new Error('offline')}
+function roomName(){return($('lanRoom').value||'').trim().toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,24)}
+async function roomOpen(asHost){const rn=roomName();if(!rn){toast('Enter a room name','bad');NET.role=null;lanUI();return}
+  lanStatus('Connecting to the online lobby...');let mod;try{mod=await loadTrystero()}catch(e){lanStatus('Could not reach the online service. Check your internet, or use Direct / Server.');netReset();lanUI();return}
+  const room=mod.joinRoom({appId:'dafhio-dominion-v2'},'dd-'+rn);NET.room=room;const act=room.makeAction('m');
+  const send=(d,pid)=>act.send(d,pid?{target:pid}:undefined);
+  if(asHost){room.onPeerJoin=pid=>{NET.peers.set(pid,{id:pid,send:m=>send(m,pid)});send({t:'iamhost'},pid)};room.onPeerLeave=pid=>hostOnPeerLeave(pid);
+    act.onMessage=(m,meta)=>hostOnMsg(meta&&meta.peerId!==undefined?meta.peerId:meta,m);lanStatus('Room "'+rn+'" is open. Friends choose Online, type the same room name and press Join.')}
+  else{room.onPeerJoin=()=>{};room.onPeerLeave=pid=>{if(pid===NET.hostPid)clientOnHostLost()};
+    act.onMessage=(m,meta)=>{const pid=meta&&meta.peerId!==undefined?meta.peerId:meta;if(m&&m.t==='iamhost'){if(!NET.hostPid){NET.hostPid=pid;NET.hostSend=x=>send(x,pid);clientOnOpen()}return}if(pid===NET.hostPid)clientOnMsg(m)};
+    lanStatus('Looking for the host in room "'+rn+'"... (keep this open)')}}
 /* ---- host lobby ---- */
 function hostOnMsg(pid,m){
   if(m.t==='hello'){if(NET.inGame){netSendTo(pid,{t:'full',msg:'The match already started'});return}const max=gameMode==='1v1'?2:6;
@@ -3596,7 +3685,7 @@ function hostOnMsg(pid,m){
   else if(m.t==='side'){const x=NET.lobby&&NET.lobby.players.find(q=>q.pid===pid);if(x){x.side=m.side==='B'?'B':'A';lobbySync()}}
   else if(m.t==='a'&&NET.inGame&&(state==='play'||state==='pause')){const ti=teams.findIndex(T=>T.human===pid);if(ti>0)applyAct(ti,m.a,m.p||{})}
 }
-function lobbySync(){if(NET.role!=='host')return;const L=NET.lobby;L.players[0].fac=playerFac;L.players[0].name=NET.name;netBroadcast({t:'lobby',players:L.players,mode:gameMode,map:mapId,diff,ev:eventsOn});renderLobby()}
+function lobbySync(){if(NET.role!=='host')return;const L=NET.lobby;L.players[0].fac=playerFac;L.players[0].name=NET.name;netBroadcast({t:'lobby',players:L.players,mode:gameMode,map:mapId,diff,ev:eventsOn,fog:fogOn,seed:RSEED});renderLobby()}
 function hostOnPeerLeave(pid){const had=NET.peers.delete(pid);
   if(NET.inGame){const T=teams.find(t=>t.human===pid);if(T){T.human=null;if(!T.ai)T.ai={t:1,waveSize:DIFF[diff].wave,attacking:false,wave:0};toast(T.name+' left - AI takes over','bad')}}
   else if(NET.lobby){const x=NET.lobby.players.find(q=>q.pid===pid);NET.lobby.players=NET.lobby.players.filter(q=>q.pid!==pid);if(x)toast(x.name+' left the lobby','bad');if(had||x)lobbySync()}}
@@ -3608,30 +3697,31 @@ function hostStart(){
   else H.forEach((h,i)=>slots[i]=h);
   const allF=PLAYABLE();
   const players=slots.map((h,i)=>({fac:h?h.fac:allF[Math.floor(Math.random()*allF.length)],side:gameMode==='3v3'?i%2:i,name:h?h.name:'AI '+(i+1),pid:h?h.pid:null}));
-  const setup={mode:gameMode,map:mapId,diff,ev:eventsOn,players};
+  const setup={mode:gameMode,map:mapId,diff,ev:eventsOn,players,seed:RSEED,fog:fogOn};
   NET.inGame=true;netBroadcast({t:'start',setup});initGame(setup);
 }
 /* ---- client ---- */
 function clientOnOpen(){lanStatus('Connected to host. Joining lobby...');NET.hostSend({t:'hello',name:NET.name,fac:NET.myFac})}
 function clientOnMsg(m){
   if(m.t==='welcome'){NET.pid=m.pid;lanStatus('In the lobby. Pick your race - the host starts the match.')}
-  else if(m.t==='lobby'){NET.lobby={players:m.players};gameMode=m.mode;mapId=m.map;diff=m.diff;eventsOn=m.ev;renderLobby()}
+  else if(m.t==='lobby'){NET.lobby={players:m.players};gameMode=m.mode;mapId=m.map;diff=m.diff;eventsOn=m.ev;if(m.fog!=null)fogOn=m.fog;if(m.seed)RSEED=m.seed;renderLobby()}
   else if(m.t==='start'){NET.inGame=true;netClientStart(m.setup)}
   else if(m.t==='s'){if(NET.client&&(state==='play'||state==='pause'))netApply(m)}
   else if(m.t==='end'){if(NET.client)netClientEnd(m)}
   else if(m.t==='full'){toast(m.msg,'bad');lanStatus(m.msg)}
 }
 function clientOnHostLost(){if(NET.role!=='client')return;const inG=state!=='menu';netReset();toast('Disconnected from the host','bad');if(inG)toMenu();lanUI()}
-function netReset(){try{NET.ws&&NET.ws.close()}catch(e){}try{NET.pc&&NET.pc.close()}catch(e){}for(const pr of NET.peers.values())try{pr.pc&&pr.pc.close()}catch(e){}
+function netReset(){try{NET.room&&NET.room.leave()}catch(e){}NET.room=null;NET.hostPid=null;try{NET.ws&&NET.ws.close()}catch(e){}try{NET.pc&&NET.pc.close()}catch(e){}for(const pr of NET.peers.values())try{pr.pc&&pr.pc.close()}catch(e){}
   NET.peers.clear();try{NET.pending&&NET.pending.close()}catch(e){}
   Object.assign(NET,{role:null,client:false,hostSend:null,pid:null,ws:null,pc:null,pending:null,inGame:false,lobby:null,events:[],spec:false});NETENT.clear();stopScan()}
 function netClientStart(setup){
   clearWorld();gameMode=setup.mode;mapId=setup.map;diff=setup.diff;eventsOn=setup.ev!==false;
-  const big=gameMode!=='1v1';if(MAP!==(big?96:66))resizeWorld(big?96:66);SUPMAX=big?80:100;CUR=big?bigMap(mapId):MAPS[mapId];
+  const big=gameMode!=='1v1';if(MAP!==(big?96:66))resizeWorld(big?96:66);SUPMAX=big?80:100;if(setup.seed)RSEED=setup.seed;if(setup.fog!=null)fogOn=setup.fog;CUR=getMap(mapId,big,RSEED);
   const P=setup.players;NET.N=P.length;NET.my=Math.max(0,P.findIndex(q=>q.pid===NET.pid));
   teams=[];for(let l=0;l<NET.N;l++){const h=unmapT(l),pl=P[h];const T=newTeam(l,pl.fac,pl.side);T.name=pl.name;T.base=CUR.bases[h];teams.push(T)}
   NP=NET.N;teams.push(makeNeutral(NP));playerFac=teams[0].fac;
   buildMapWorld();nodes=buildAllNodes();for(const p of points){p.owner=-1;p.prog=0;p.capT=-1}paintGround();
+  fogInit();
   NETENT.clear();gtime=0;uid=0;mode='normal';boxMode=false;forceMove=false;endTimer=-1;lastAlert=-99;NET.client=true;NET.spec=false;
   cam.x=teams[0].base.x*.92;cam.z=teams[0].base.z*.92;cam.h=isTouch?36:42;qDone=false;lagT=0;lagN=0;
   setPowerUi();buildQuick();groups=[[],[],[]];cardDirty=true;state='play';
@@ -3720,7 +3810,7 @@ async function startScan(){try{await loadScript('https://cdnjs.cloudflare.com/aj
   scanTimer=setInterval(()=>{if(!v.videoWidth)return;c.width=v.videoWidth;c.height=v.videoHeight;g.drawImage(v,0,0);const im=g.getImageData(0,0,c.width,c.height);const r=window.jsQR&&jsQR(im.data,c.width,c.height);if(r&&r.data){$('lanCodeIn').value=r.data;stopScan();buzz(30);lanGo()}},300)}
   catch(e){toast('Camera not available here - paste the code instead','bad');stopScan()}}
 function lanName(){const n=($('lanName').value||'').trim().slice(0,14);if(!n){toast('Enter your player name first','bad');$('lanName').focus();return null}try{localStorage.setItem('svName',n)}catch(e){}return n}
-function lanUI(){const r=NET.role;lanShow('lanActs',!r);lanShow('lanVia',!r);lanShow('wsRow',!r&&NET.via==='ws');$('lanName').disabled=!!r;
+function lanUI(){const r=NET.role;lanShow('lanActs',!r);lanShow('lanVia',!r);lanShow('wsRow',!r&&NET.via==='ws');lanShow('roomRow',!r&&NET.via==='room');$('lanName').disabled=!!r;
   lanShow('lanX',r&&NET.via==='rtc');lanShow('lanLobby',!!r);lanShow('lanInvite',r==='host'&&NET.via==='rtc');if(!r){lanShow('lanOut',0);lanShow('lanIn',0);lanStatus('')}renderLobby()}
 async function lanGo(){const code=$('lanCodeIn').value.trim();if(!code){toast('Paste a code first','bad');return}
   try{if(NET.role==='host'){await rtcAccept(code);lanShow('lanIn',0);lanShow('lanOut',0);$('lanCodeIn').value='';lanStatus('Connecting...')}
@@ -3736,18 +3826,20 @@ function renderLobby(){
     `<p class="mdesc">${L.players.length} human player(s). Empty slots (${(gameMode==='1v1'?2:6)-L.players.length}) are filled by AI.</p>`;
   if(host){$('lanSettings').innerHTML=`<div class="lbl">Match settings</div><div class="row3">
     <select id="lsMode">${['1v1','3v3','ffa'].map(v=>`<option value="${v}" ${v===gameMode?'selected':''}>${v==='ffa'?'FFA (6)':v}</option>`).join('')}</select>
-    <select id="lsMap">${Object.keys(MAPS).map(v=>`<option value="${v}" ${v===mapId?'selected':''}>${MAPS[v].name}</option>`).join('')}</select>
-    <select id="lsDiff">${['easy','normal','hard'].map(v=>`<option value="${v}" ${v===diff?'selected':''}>AI ${v}</option>`).join('')}</select>
-    <select id="lsEv"><option value="1" ${eventsOn?'selected':''}>Events on</option><option value="0" ${!eventsOn?'selected':''}>Events off</option></select></div>`;
-    $('lsMode').onchange=e=>{gameMode=e.target.value;lobbySync()};$('lsMap').onchange=e=>{mapId=e.target.value;lobbySync()};$('lsDiff').onchange=e=>{diff=e.target.value;lobbySync()};$('lsEv').onchange=e=>{eventsOn=e.target.value==='1';lobbySync()}}
-  else $('lanSettings').innerHTML=`<p class="mdesc">Mode <b>${gameMode}</b> · Map <b>${(MAPS[mapId]||{}).name}</b> · AI <b>${diff}</b> · Events <b>${eventsOn?'on':'off'}</b></p>`;
+    <select id="lsMap">${Object.keys(MAPS).concat(['random']).map(v=>`<option value="${v}" ${v===mapId?'selected':''}>${v==='random'?'Random map':MAPS[v].name}</option>`).join('')}</select>
+    <select id="lsDiff">${['easy','normal','hard','dominion'].map(v=>`<option value="${v}" ${v===diff?'selected':''}>AI ${v}</option>`).join('')}</select>
+    <select id="lsFog"><option value="1" ${fogOn?'selected':''}>Fog on</option><option value="0" ${!fogOn?'selected':''}>Fog off</option></select><select id="lsEv"><option value="1" ${eventsOn?'selected':''}>Events on</option><option value="0" ${!eventsOn?'selected':''}>Events off</option></select></div>`;
+    $('lsMode').onchange=e=>{gameMode=e.target.value;lobbySync()};$('lsMap').onchange=e=>{mapId=e.target.value;if(mapId==='random')RSEED=1+Math.floor(Math.random()*99999);lobbySync()};$('lsDiff').onchange=e=>{diff=e.target.value;lobbySync()};$('lsEv').onchange=e=>{eventsOn=e.target.value==='1';lobbySync()};$('lsFog').onchange=e=>{fogOn=e.target.value==='1';lobbySync()}}
+  else $('lanSettings').innerHTML=`<p class="mdesc">Mode <b>${gameMode}</b> · Map <b>${mapId==='random'?'Random':(MAPS[mapId]||{}).name}</b> · Fog <b>${fogOn?'on':'off'}</b> · AI <b>${diff}</b> · Events <b>${eventsOn?'on':'off'}</b></p>`;
 }
 $('lanRace').addEventListener('click',e=>{const b=e.target.closest('.emb');if(!b)return;const f=b.dataset.f;if(NET.role==='host'){playerFac=f;lobbySync()}else{NET.myFac=f;playerFac=f;if(NET.hostSend)NET.hostSend({t:'pick',fac:f});renderLobby()}});
 document.querySelectorAll('#lanSide button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#lanSide button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');NET.mySide=b.dataset.s;if(NET.hostSend)NET.hostSend({t:'side',side:b.dataset.s})}));
 document.querySelectorAll('#lanVia button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#lanVia button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');NET.via=b.dataset.v;lanUI()}));
 $('lanHost').addEventListener('click',()=>{const n=lanName();if(!n)return;NET.name=n;NET.role='host';NET.lobby={players:[{name:n,fac:playerFac,pid:'host',side:'A'}]};
+  if(NET.via==='room'){lanUI();lobbySync();roomOpen(true);return}
   if(NET.via==='ws'){wsHost();lanStatus('Connecting to server...')}else lanStatus('Press "Invite a player" and show the code or QR to your friend.');lanUI();lobbySync()});
 $('lanJoin').addEventListener('click',()=>{const n=lanName();if(!n)return;NET.name=n;NET.role='client';NET.myFac=playerFac;
+  if(NET.via==='room'){lanUI();roomOpen(false);return}
   if(NET.via==='ws'){wsJoin();lanStatus('Connecting to server...')}else{lanShow('lanIn',1);$('lanInLbl').textContent='Scan or paste the invite code from the host';lanStatus('')}lanUI();if(NET.via==='rtc')lanShow('lanIn',1)});
 $('lanInvite').addEventListener('click',async()=>{if(NET.lobby.players.length>=(gameMode==='1v1'?2:6)){toast('Lobby is full for this mode','bad');return}lanStatus('Creating invite...');
   try{const code=await rtcInvite();await showCode(code,'Invite code - your friend scans or pastes it');lanShow('lanIn',1);$('lanInLbl').textContent='Then scan or paste their reply code here';lanStatus('Waiting for the reply code...')}catch(e){toast('WebRTC not available on this browser','bad')}});
@@ -3844,6 +3936,7 @@ function frame(now){
   else if(state==='menu'){gtime+=dt;for(const q of points)pointVis(q,dt);menuShowcaseUpd(dt);animate(dt)}
   if(state==='play'||state==='end'||state==='pause'){animate(dt);drawMini(dt)}
   if(island)island.visible=state==='menu';
+  if(FOG.mesh)FOG.mesh.visible=FOG.on&&state!=='menu';if(state==='play'||state==='pause')fogUpdate(dt);
   if(state!=='pause'){
     for(let i=fxs.length-1;i>=0;i--){const f=fxs[i];f.t+=dt;const k=Math.min(1,f.t/f.life);f.upd(k);if(k>=1){fxs.splice(i,1);f.done&&f.done()}}
     updParticles(dt);updTrails(dt);
@@ -3858,7 +3951,7 @@ function frame(now){
   document.body.classList.toggle('inmenu',state==='menu');renderer.render(scene,camera);
 }
 requestAnimationFrame(frame);
-window.__game={get snd(){return SND},get ents(){return ents},get teams(){return teams},get state(){return state},initGame,step,setFac:f=>playerFac=f,place:(t,k,x,z)=>placeBuilding(t,k,x,z,true),spawn:(t,k,x,z)=>{const u=spawnUnit(t,k,x,z);teams[t].sup+=u.d.sup;return u},cam};
+window.__game={genMap,genConnected,get snd(){return SND},get ents(){return ents},get teams(){return teams},get state(){return state},initGame,step,setFac:f=>playerFac=f,place:(t,k,x,z)=>placeBuilding(t,k,x,z,true),spawn:(t,k,x,z)=>{const u=spawnUnit(t,k,x,z);teams[t].sup+=u.d.sup;return u},cam};
 })();
 </script>
 </body>

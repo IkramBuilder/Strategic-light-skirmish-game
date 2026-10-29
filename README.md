@@ -7,6 +7,7 @@ Single HTML file + Three.js (r128 from cdnjs). Original factions inspired by cla
 
 ## Play
 - **Single player:** open `dafhio-dominion.html` in a browser → pick a race → **Deploy vs AI**.
+- **Online (anywhere):** *Multiplayer* → **Online room** → everyone types the same room name → one Host, others Join. Serverless (Trystero WebRTC over public Nostr relays).
 - **LAN (same Wi-Fi):**
   - **Direct (no server):** both players open the game → *LAN multiplayer* → enter a name → host presses **Host → Invite a player**, the friend presses **Join**, scans/pastes the invite code, then shows the reply code back to the host.
   - **Server:** on a PC run `node server.js` (Node 18+, no dependencies) next to `dafhio-dominion.html`. Everyone opens the printed `http://<PC-IP>:8080` address → *LAN multiplayer* → **Server** → Host / Join.
@@ -16,6 +17,7 @@ Single HTML file + Three.js (r128 from cdnjs). Original factions inspired by cla
 ## Features
 - 7 races: Vanguard Directive, Hollow Swarm, Aether Covenant, Iron Templars, Gorrak Warband, Hollow Legion, Ashen Cult – each with 10 units, 7 structures, a hero, a caster spell and a commander power.
 - 4 maps (standard + large 6-player versions): Iron Basin, Golden Core, Shattered Isles, Verdant Twin Lanes.
+- Fog of war, Dominion difficulty (smart AI: focus fire, kiting, retreat, flanking, raids), random map generator with shareable seed.
 - Map events: meteor showers, supply drops, Ancient Colossus boss, crystal blooms at the centre.
 - Score, MVP and 15 achievements (saved on the device).
 - Graphics: Low / Medium / High / Ultra (PC, real-time shadows) with automatic lag guard.
@@ -29,7 +31,7 @@ Single HTML file + Three.js (r128 from cdnjs). Original factions inspired by cla
 | `server.js` | Optional LAN relay + static server |
 
 ## Credits
-- Three.js (MIT); anime.js (MIT) and canvas-confetti (ISC) loaded from CDN.
+- Three.js (MIT); Trystero (MIT, loaded on demand for online rooms); anime.js (MIT) and canvas-confetti (ISC) loaded from CDN.
 - Sound effects (CC0 1.0): Kenney Sci-Fi Sounds and Impact Sounds (via Boyquotes ports), Superpowers asset packs by Sparklin Labs, Thimras cannon (OpenGameArt), Still North Media weapons library (via PanderMusubi/sound-effects-library-weapons), Electricity game sound pack (OpenGameArt) - via EternityForest/Free-SFX.
 - Music: original procedural metal/rock tracks generated in code.
 - Game code and 3D art are procedural/original.
