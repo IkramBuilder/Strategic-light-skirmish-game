@@ -27,4 +27,7 @@ Single HTML file + Three.js (r128 from cdnjs). Original factions inspired by cla
 | `server.js` | Optional LAN relay + static server |
 
 ## Credits
-Three.js (MIT). Game code and art are procedural/original.
+- Three.js (MIT); anime.js (MIT) and canvas-confetti (ISC) loaded from CDN.
+- Sound effects (CC0 1.0): Kenney Sci-Fi Sounds and Impact Sounds (via Boyquotes ports), Superpowers asset packs by Sparklin Labs, Thimras cannon (OpenGameArt), Still North Media weapons library (via PanderMusubi/sound-effects-library-weapons), Electricity game sound pack (OpenGameArt) - via EternityForest/Free-SFX.
+- Music: original procedural metal/rock tracks generated in code.
+- Game code and 3D art are procedural/original.
