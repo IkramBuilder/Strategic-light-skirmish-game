@@ -81,6 +81,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .tm.bad{border-left-color:var(--bad)} .tm.good{border-left-color:var(--good)}
 @keyframes tin{from{opacity:0;transform:translateY(-6px)}}
 #vig{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 42%,transparent 52%,rgba(0,4,8,.5) 100%)}
+#grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.09;mix-blend-mode:overlay;display:none;background-size:160px 160px}
 input[type=range]{width:100%;accent-color:var(--amber)}
 #sndBtn.off{color:var(--dim);text-decoration:line-through}
 #box{position:fixed;border:1px solid var(--good);background:rgba(99,232,143,.1);display:none;pointer-events:none;z-index:4}
@@ -156,6 +157,7 @@ table.stand tr.me td{color:var(--amber)}.dot{display:inline-block;width:9px;heig
 <body>
 <canvas id="c"></canvas>
 <div id="vig"></div>
+<div id="grain"></div>
 
 <div id="top">
   <div class="res cr"><i>◆</i><span id="rC">0</span></div>
@@ -218,6 +220,8 @@ table.stand tr.me td{color:var(--amber)}.dot{display:inline-block;width:9px;heig
     <div class="seg" id="fogSeg"><button data-f2="1" class="sel">On</button><button data-f2="0">Off</button></div>
     <div class="lbl">Map events</div>
     <div class="seg" id="evSeg"><button data-ev="1" class="sel">On</button><button data-ev="0">Off</button></div>
+    <div class="lbl">Art style (High / Ultra)</div>
+    <div class="seg artSeg"><button data-art="1" class="sel">Painted</button><button data-art="0">Classic</button></div>
     <div class="lbl">Graphics</div>
     <div class="seg"><button data-q="0">Low</button><button data-q="1">Medium</button><button data-q="2">High</button><button data-q="3" class="pcq">Ultra (PC)</button></div>
     <button class="big bevel" id="startBtn">Deploy vs AI</button>
@@ -276,7 +280,7 @@ table.stand tr.me td{color:var(--amber)}.dot{display:inline-block;width:9px;heig
     <button class="big bevel" id="resumeBtn">Resume</button>
     <div class="lbl">Music volume</div><input type="range" id="musVol" min="0" max="100" value="45">
     <div class="lbl">Effects volume</div><input type="range" id="sfxVol" min="0" max="100" value="80">
-    <div class="lbl">Graphics</div><div class="seg"><button data-q="0">Low</button><button data-q="1">Medium</button><button data-q="2">High</button><button data-q="3" class="pcq">Ultra</button></div>
+    <div class="lbl">Art style</div><div class="seg artSeg"><button data-art="1" class="sel">Painted</button><button data-art="0">Classic</button></div><div class="lbl">Graphics</div><div class="seg"><button data-q="0">Low</button><button data-q="1">Medium</button><button data-q="2">High</button><button data-q="3" class="pcq">Ultra</button></div>
     <button class="ghost" id="restartBtn">Restart match</button>
     <button class="ghost" id="quitBtn">Quit to menu</button>
   </div>
@@ -317,9 +321,10 @@ window.SFXDATA={"aegis":"SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAA
 /* =========================================================
    REVISION  (badge top-right; details behind DEV_PIN)
    ========================================================= */
-const REV='2.5.0';
+const REV='2.6.0';
 const DEV_PIN='2468';           // change this to your own PIN
 const CHANGELOG=[
+ {rev:'2.6.0',date:'2026-10-30',notes:['Painted art style (High/Ultra): cel-shaded toon materials, ink outlines on units and buildings','Painted skies per map (sunset, ember, misty teal, jungle haze) with clouds, sun glow and layered mountain silhouettes; distance mist matches the sky','Brush-stroke ground patches, paper grain overlay, ancient stone arches as decor','Art style toggle (Painted / Classic) in menu and pause']},
  {rev:'2.5.0',date:'2026-10-30',notes:['Online rooms (Trystero, no server): type the same room name to play over the internet','Fog of war: unexplored / explored / visible, ally-shared vision, hidden enemies on screen and minimap; toggle in menu and LAN','Dominion difficulty: focus fire, target priority, kiting, retreat-and-regroup, gather-then-strike with flanking, worker raids','Random map generator with shareable seed (re-roll by tapping Random again); connectivity checked','Dominator achievement']},
  {rev:'2.4.0',date:'2026-10-30',notes:['Recorded CC0 weapon/impact sounds (Kenney, Superpowers, Still North Media, Thimras, Electricity pack) with pitch variation; synth fallback','5 original procedural metal/rock tracks: Banners Rise (menu), Iron Basin (thrash), Golden Core (groove), Shattered Isles (doom), Verdant War (d-beat); layers grow with combat intensity','Gold crown + name above every hero','Movement realism: acceleration/deceleration, heavy units turn before driving, stride synced to real speed (no foot sliding), vehicle pitch on brake/accelerate, body roll in turns, air units bank into turns']},
  {rev:'2.3.0',date:'2026-10-30',notes:['Ultra skeletons for all 7 races: humanoids (troopers, brutes, skeletons, cultists, wardens), insects (tripod gait, bending legs, mandibles, tails), jellyfish/oracle tentacles, serpent spine, winged flyers (two-joint wing flaps), reverse-knee walker, Dreadnought-style walkers','Dual-blade, launcher, flamer and claw combat poses; wings on the Fiend; tails on the Hive Tyrant','Every rig has its own death animation','Fix: building HP no longer shows long decimals (e.g. 1839.9999999)']},
@@ -650,7 +655,7 @@ const renderer=new THREE.WebGLRenderer({canvas,antialias:!isTouch,powerPreferenc
 renderer.setPixelRatio(Math.min(devicePixelRatio,isTouch?1.3:2));
 renderer.setSize(innerWidth,innerHeight);
 const scene=new THREE.Scene();
-(()=>{const c=document.createElement('canvas');c.width=2;c.height=256;const g=c.getContext('2d');const gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#0e2433');gr.addColorStop(.55,'#0a1b26');gr.addColorStop(1,'#04090e');g.fillStyle=gr;g.fillRect(0,0,2,256);scene.background=new THREE.CanvasTexture(c)})();
+(()=>{const c=document.createElement('canvas');c.width=2;c.height=256;const g=c.getContext('2d');const gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#0e2433');gr.addColorStop(.55,'#0a1b26');gr.addColorStop(1,'#04090e');g.fillStyle=gr;g.fillRect(0,0,2,256);scene.background=window.__DEFBG=new THREE.CanvasTexture(c)})();
 scene.fog=new THREE.Fog(0x0c2130,80,160);
 const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,1,320);
 scene.add(new THREE.HemisphereLight(0xb4dcff,0x2a1f18,0.8));
@@ -677,7 +682,15 @@ function toScreen(x,y,z){V.set(x,y,z).project(camera);return{x:(V.x+1)/2*innerWi
 const GC={},MC={};
 const geo=(k,f)=>GC[k]||(GC[k]=f());
 const matc=(k,f)=>MC[k]||(MC[k]=f());
-const std=(c,e)=>matc('l'+c+'_'+(e||0),()=>new THREE.MeshLambertMaterial({color:c,emissive:e||0}));
+
+/* --- painted art style --- */
+let ART=true;const artOn=()=>ART&&GQ>=2;
+const TOONG=(()=>{const d=new Uint8Array([60,60,60,255,130,130,130,255,200,200,200,255,255,255,255,255]);const t=new THREE.DataTexture(d,4,1,THREE.RGBAFormat);t.minFilter=t.magFilter=THREE.NearestFilter;t.generateMipmaps=false;t.needsUpdate=true;return t})();
+const OUTLINE=new THREE.MeshBasicMaterial({color:0x0c0a0e,side:THREE.BackSide});
+OUTLINE.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  transformed += normalize(normal) * 0.032;')};
+function addOutlines(root){const list=[];root.traverse(o=>{if(o.isMesh&&o.material&&(o.material.type==='MeshToonMaterial'||o.material.type==='MeshLambertMaterial')&&!o.material.transparent)list.push(o)});
+  for(const m of list){const o=new THREE.Mesh(m.geometry,OUTLINE);o.raycast=()=>{};o.castShadow=false;o.renderOrder=-1;m.add(o)}}
+const std=(c,e)=>artOn()?matc('t'+c+'_'+(e||0),()=>new THREE.MeshToonMaterial({color:c,emissive:e||0,gradientMap:TOONG})):matc('l'+c+'_'+(e||0),()=>new THREE.MeshLambertMaterial({color:c,emissive:e||0}));
 const glow=c=>matc('g'+c,()=>new THREE.MeshBasicMaterial({color:c}));
 const box=(w,h,d)=>geo(`b${w}_${h}_${d}`,()=>new THREE.BoxGeometry(w,h,d));
 const cyl=(a,b,h,s)=>{s=sq(s||8);return geo(`c${a}_${b}_${h}_${s}`,()=>new THREE.CylinderGeometry(a,b,h,s))};
@@ -720,6 +733,26 @@ function buildGround(){
   const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));
   groundLines=new THREE.LineSegments(lg,matc('gridl',()=>new THREE.LineBasicMaterial({color:0x1c3442,transparent:true,opacity:.35})));scene.add(groundLines);
 }
+
+const SKYP={basin:{top:'#273352',mid:'#7a5c72',hor:'#e3936a',sun:'#ffd9a8',m1:'#4a3a52',m2:'#5e4a5e',fog:0x8a6a70},
+ gold:{top:'#341c2e',mid:'#a64a3c',hor:'#f4ad5e',sun:'#fff1b8',m1:'#4f2a2c',m2:'#6d3a32',fog:0xa2664e},
+ isles:{top:'#14303f',mid:'#3f7b88',hor:'#acdcd2',sun:'#f2fff8',m1:'#24484f',m2:'#3a6468',fog:0x6a9a9a},
+ jungle:{top:'#18291c',mid:'#4b6c3c',hor:'#dcc47c',sun:'#fff6c4',m1:'#22402a',m2:'#3a5a36',fog:0x6f8458}};
+const SKYC={};
+function paintSky(id,seed){const k=id+'_'+seed;if(SKYC[k])return SKYC[k];const P=SKYP[id]||SKYP.basin,R=srand(seed*31+7),W=1024,H=512;
+  const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,P.top);gr.addColorStop(.5,P.mid);gr.addColorStop(.82,P.hor);gr.addColorStop(1,P.hor);g.fillStyle=gr;g.fillRect(0,0,W,H);
+  const sx=W*(.55+R()*.3),sy=H*(.55+R()*.12);let rg=g.createRadialGradient(sx,sy,0,sx,sy,H*.55);rg.addColorStop(0,P.sun+'ee');rg.addColorStop(.12,P.sun+'99');rg.addColorStop(1,P.sun+'00');g.fillStyle=rg;g.fillRect(0,0,W,H);
+  g.fillStyle=P.sun;g.globalAlpha=.85;g.beginPath();g.arc(sx,sy,18+R()*10,0,7);g.fill();g.globalAlpha=1;
+  for(let i=0;i<70;i++){const x=R()*W,y=H*(.08+R()*.6),w=60+R()*260,h=6+R()*22;const cg=g.createRadialGradient(x,y,0,x,y,w/2);const light=R()<.6;
+    cg.addColorStop(0,(light?'#ffffff':P.top)+(light?'30':'40'));cg.addColorStop(1,'#ffffff00');g.save();g.translate(x,y);g.scale(1,h/w);g.translate(-x,-y);g.fillStyle=cg;g.beginPath();g.arc(x,y,w/2,0,7);g.fill();g.restore()}
+  g.lineCap='round';for(let i=0;i<40;i++){const y=H*(.15+R()*.55),x=R()*W,l=80+R()*240;g.strokeStyle=(R()<.5?P.sun:'#ffffff')+'22';g.lineWidth=1+R()*3;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+l/2,y-6+R()*12,x+l,y+R()*6);g.stroke()}
+  for(const [col,base,amp,al] of[[P.m1,.86,.16,.9],[P.m2,.8,.12,.75],[P.hor,.76,.07,.35]]){g.fillStyle=col;g.globalAlpha=al;g.beginPath();g.moveTo(0,H);let y=H*base;for(let x=0;x<=W;x+=16){y+= (R()-.5)*amp*H*.18;y=Math.max(H*(base-amp),Math.min(H*(base+amp*.4),y));g.lineTo(x,y)}g.lineTo(W,H);g.closePath();g.fill()}
+  g.globalAlpha=1;const mg=g.createLinearGradient(0,H*.7,0,H);mg.addColorStop(0,P.hor+'00');mg.addColorStop(1,P.hor+'cc');g.fillStyle=mg;g.fillRect(0,H*.7,W,H*.3);
+  const im=g.getImageData(0,0,W,H),d=im.data;for(let i=0;i<d.length;i+=4){const n=(R()-.5)*14;d[i]+=n;d[i+1]+=n;d[i+2]+=n}g.putImageData(im,0,0);
+  const t=new THREE.CanvasTexture(c);SKYC[k]=t;return t}
+function applySky(){if(!CUR)return;const id=CUR.track||mapId;if(artOn()&&SKYP[id]){scene.background=paintSky(id,CUR.seed||1);scene.fog.color.setHex(SKYP[id].fog)}
+  else{scene.background=window.__DEFBG;scene.fog.color.setHex(0x0c2130)}document.getElementById('grain').style.display=artOn()?'block':'none'}
 function paintGround(){
   const pos=ground.geometry.attributes.position,col=ground.geometry.attributes.color,TT=CUR.tint,facs=teams.map(t=>t.fac);
   for(let i=0;i<pos.count;i++){
@@ -739,6 +772,7 @@ function paintGround(){
       else ao=Math.max(ao,clamp(1-(dd-o.r)/3.5,0,1)*(o.kind==='jungle'?.6:.55))}
     for(const o of decor){const dd=Math.sqrt(d2(px,pz,o.x,o.z));if(dd<o.r+2.5)ao=Math.max(ao,clamp(1-(dd-o.r*.4)/2.5,0,1)*.4)}
     for(const q of points){const dd=Math.sqrt(d2(px,pz,q.x,q.z));if(dd<7)ao=Math.max(ao,clamp(1-Math.abs(dd-5.2)/1.6,0,1)*.3)}
+    if(artOn()){const bl=Math.sin(px*.07+pz*.031)*Math.cos(pz*.06-px*.02)+Math.sin((px+pz)*.13)*.4;const k=1+bl*.11;r*=k;g*=k;b*=k*.97;const st=Math.sin(px*.9+Math.sin(pz*.35)*2.2)*.5+.5;r+=st*.012;g+=st*.012;b+=st*.008}
     r*=1-ao;g*=1-ao;b*=1-ao*.85;
     col.setXYZ(i,r,g,b);
   }
@@ -1118,8 +1152,9 @@ function makeUnitMesh(team,fac,key){
     p.aura=new THREE.Sprite(matc('aura',()=>new THREE.SpriteMaterial({map:GLOW,color:0xff3355,blending:THREE.AdditiveBlending,transparent:true,opacity:.55,depthWrite:false})));
     p.aura.scale.setScalar(d.r*4);p.aura.position.y=d.h*.45;p.aura.visible=false;p.root.add(p.aura);
   }
-  if(!p.rig)bakeStatic(p,'u_'+fac+'_'+key+'_'+GQ);
-  if(GQ===3)p.root.traverse(o=>{if(o.isMesh&&o.material&&o.material.type==='MeshLambertMaterial')o.castShadow=true});
+  if(!p.rig)bakeStatic(p,'u_'+fac+'_'+key+'_'+GQ+(artOn()?'a':''));
+  if(GQ===3)p.root.traverse(o=>{if(o.isMesh&&o.material&&(o.material.type==='MeshLambertMaterial'||o.material.type==='MeshToonMaterial'))o.castShadow=true});
+  if(artOn())addOutlines(p.lunge);
   return p;
 }
 function makeBuildingMesh(team,fac,key){
@@ -1172,8 +1207,9 @@ function makeBuildingMesh(team,fac,key){
       p.spin=mk(sph(.35,8),G,0,3.5,0,L);p.gun=null;
     }
   }
-  bakeStatic(p,'b_'+fac+'_'+key+'_'+GQ);
-  if(GQ===3)p.root.traverse(o=>{if(o.isMesh&&o.material&&o.material.type==='MeshLambertMaterial'){o.castShadow=true;o.receiveShadow=true}});
+  bakeStatic(p,'b_'+fac+'_'+key+'_'+GQ+(artOn()?'a':''));
+  if(GQ===3)p.root.traverse(o=>{if(o.isMesh&&o.material&&(o.material.type==='MeshLambertMaterial'||o.material.type==='MeshToonMaterial')){o.castShadow=true;o.receiveShadow=true}});
+  if(artOn())addOutlines(p.lunge);
   return p;
 }
 
@@ -1990,6 +2026,10 @@ function buildDecor(){
   inst(box(1,1,1),std(0x5f6468),pil);inst(box(1,1,1),std(0x4b5054),slab);
   inst(box(1,1,1),std(0x3d3029),hull);inst(cyl(1,1,1,6),std(0x2a231f),bar);
   inst(cyl(.22,.3,2,6),std(0x3b2c1f),jt);inst(sph(1,8),std(0x1d4a26),jc);inst(sph(1,6),std(0x2a5e30),jb);
+  const ap=[],al=[];for(let k=0;k<(MAP>70?5:3);k++){const c=spot(3);if(!c)continue;const ry=R()*3,h=3.4+R()*1.6,w=2.6+R()*.8;
+    for(const sg of[1,-1]){const x=c[0]*sg,z=c[1]*sg,cs=Math.cos(ry),sn=Math.sin(ry);for(const s2 of[-1,1])ap.push({x:x+cs*s2*w,y:h/2,z:z-sn*s2*w,sx:.7,sy:h,sz:.7,ry});
+      al.push({x,y:h+.25,z,sx:w*2+1.4,sy:.45,sz:.85,ry});al.push({x,y:h-.55,z,sx:w*2+.2,sy:.25,sz:.55,ry})}add(c[0],c[1],w+1)}
+  inst(box(1,1,1),std(0x6f665c),ap);inst(box(1,1,1),std(0x5a4a3e),al);
   inst(geo('rock',()=>new THREE.DodecahedronGeometry(1,0)),std(0x2e343a),cl);
 }
 
@@ -2840,7 +2880,7 @@ function initGame(setup){
   buildMapWorld();
   nodes=buildAllNodes();
   for(const p of points){p.owner=-1;p.prog=0;p.capT=-1}
-  paintGround();navDirty=true;
+  paintGround();navDirty=true;applySky();
   for(let t=0;t<NP;t++){
     const b=CUR.bases[t];placeBuilding(t,'hq',b.x,b.z,true);
     for(let i=0;i<6;i++){const a=i*1.05;const u=spawnUnit(t,'worker',b.x+Math.sin(a)*5,b.z+Math.cos(a)*5);u.state='gather';teams[t].sup+=1}
@@ -3542,6 +3582,8 @@ $('musVol').addEventListener('input',e=>{SND.musV=e.target.value/100;if(SND.mus)
 $('sfxVol').addEventListener('input',e=>{SND.sfxV=e.target.value/100;if(SND.sfx)SND.sfx.gain.value=SND.sfxV});
 document.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{setQuality(+b.dataset.q);qDone=true}));
 document.querySelectorAll('#enemySeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#enemySeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');enemyPick=b.dataset.e;menuBackdrop()}));
+document.querySelectorAll('[data-art]').forEach(b=>b.addEventListener('click',()=>{ART=b.dataset.art==='1';document.querySelectorAll('[data-art]').forEach(x=>x.classList.toggle('sel',x.dataset.art===b.dataset.art));
+  if(ART&&GQ<2)toast('Painted style shows on High or Ultra graphics');if(state==='menu'){builtMap=null;menuBackdrop()}else{rebuildAllMeshes();toast('Rocks and terrain update next match')}applySky()}));
 document.querySelectorAll('#fogSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#fogSeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');fogOn=b.dataset.f2==='1'}));
 document.querySelectorAll('#evSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#evSeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');eventsOn=b.dataset.ev==='1'}));
 document.querySelectorAll('#modeSeg button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');gameMode=b.dataset.mode;menuBackdrop()}));
@@ -3615,9 +3657,10 @@ function menuShowcaseUpd(dt){for(const u of showcase){u.sc+=dt*.11;const r=9,nx=
 function menuCamera(dt){menuT+=dt;menuAng+=dt*.07;const R=MAP*2.55,H=MAP*1.25,bob=Math.sin(menuT*.6)*3;
   camera.position.set(Math.sin(menuAng)*R,H+bob,Math.cos(menuAng)*R);camera.lookAt(0,-14+bob*.3,0);scene.fog.near=R*.95;scene.fog.far=R*3.4;
   const w=innerWidth,h=innerHeight;if(w>=900)camera.setViewOffset(w,h,-Math.min(320,w*.22),0,w,h);else camera.setViewOffset(w,h,0,h*.3,w,h)}
+(()=>{const c=document.createElement('canvas');c.width=c.height=160;const g=c.getContext('2d'),im=g.createImageData(160,160);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255}g.putImageData(im,0,0);document.getElementById('grain').style.backgroundImage='url('+c.toDataURL()+')'})();
 function menuBackdrop(){if(state!=='menu')return;FOG.on=false;clearWorld();const big=gameMode!=='1v1';if(MAP!==(big?96:66))resizeWorld(big?96:66);CUR=getMap(mapId,big,RSEED);
   const opp=PLAYABLE().filter(f=>f!==playerFac);teams=[newTeam(0,playerFac,0),newTeam(1,(enemyPick!=='random'&&enemyPick!==playerFac)?enemyPick:opp[Math.floor(Math.random()*opp.length)],1)];NP=2;
-  buildMapWorld();nodes=buildAllNodes();for(const p of points){p.owner=-1;p.prog=0;p.capT=-1}paintGround();
+  buildMapWorld();nodes=buildAllNodes();for(const p of points){p.owner=-1;p.prog=0;p.capT=-1}paintGround();applySky();
   placeBuilding(0,'hq',CUR.bases[0].x,CUR.bases[0].z,true);placeBuilding(1,'hq',CUR.bases[1].x,CUR.bases[1].z,true);
   buildIsland();menuShowcase()}
 
@@ -3720,7 +3763,7 @@ function netClientStart(setup){
   const P=setup.players;NET.N=P.length;NET.my=Math.max(0,P.findIndex(q=>q.pid===NET.pid));
   teams=[];for(let l=0;l<NET.N;l++){const h=unmapT(l),pl=P[h];const T=newTeam(l,pl.fac,pl.side);T.name=pl.name;T.base=CUR.bases[h];teams.push(T)}
   NP=NET.N;teams.push(makeNeutral(NP));playerFac=teams[0].fac;
-  buildMapWorld();nodes=buildAllNodes();for(const p of points){p.owner=-1;p.prog=0;p.capT=-1}paintGround();
+  buildMapWorld();nodes=buildAllNodes();for(const p of points){p.owner=-1;p.prog=0;p.capT=-1}paintGround();applySky();
   fogInit();
   NETENT.clear();gtime=0;uid=0;mode='normal';boxMode=false;forceMove=false;endTimer=-1;lastAlert=-99;NET.client=true;NET.spec=false;
   cam.x=teams[0].base.x*.92;cam.z=teams[0].base.z*.92;cam.h=isTouch?36:42;qDone=false;lagT=0;lagN=0;
@@ -3919,7 +3962,8 @@ function setQuality(q){
   renderer.shadowMap.enabled=q===3;sun.castShadow=q===3;if(q===3){renderer.shadowMap.type=THREE.PCFSoftShadowMap;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;sun.shadow.camera.near=1;sun.shadow.camera.far=160;sun.shadow.bias=-.0006;scene.add(sun.target)}
   if(ground)ground.receiveShadow=q===3;for(const M of Object.values(MC))M.needsUpdate=true;
   motes.visible=q>0;document.querySelectorAll('[data-q]').forEach(b=>b.classList.toggle('sel',+b.dataset.q===q));
-  if(ch)rebuildAllMeshes();
+  if(ch){if(state==='menu'){builtMap=null;menuBackdrop()}else rebuildAllMeshes()}
+  applySky();
 }
 let lagT=0,lagN=0;
 function qualityCheck(dt){
